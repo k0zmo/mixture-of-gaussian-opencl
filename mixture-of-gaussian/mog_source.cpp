@@ -127,8 +127,7 @@ static void process8uC1( const cv::Mat& image, cv::Mat& fgmask, double learningR
 				if( d2 < vT*var )
 				{
 					wsum -= w;
-					float dw = alpha*(1.f - w);
-					mptr[k].weight = w + dw;
+					mptr[k].weight = w + alpha*(1.f - w);
 					mptr[k].mean = mu + alpha*diff;
 					var = cv::max(var + alpha*(d2 - var), minVar);
 					mptr[k].var = var;
