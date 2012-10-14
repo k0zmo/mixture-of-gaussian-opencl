@@ -24,12 +24,18 @@
     <ClCompile Include="QPCTimer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MixtureOfGaussianCPU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="QPCTimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MixtureOfGaussianCPU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

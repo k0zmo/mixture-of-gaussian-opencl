@@ -81,6 +81,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MixtureOfGaussianCPU.cpp" />
     <ClCompile Include="Precompiled.cpp">
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ForcedIncludeFiles>
@@ -92,6 +93,7 @@
     <ClCompile Include="QPCTimer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MixtureOfGaussianCPU.h" />
     <ClInclude Include="Precompiled.h" />
     <ClInclude Include="QPCTimer.h" />
   </ItemGroup>
