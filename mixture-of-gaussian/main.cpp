@@ -11,7 +11,8 @@
 int main(int, char**)
 {
 	// Open sample video
-	cv::VideoCapture cap("surveillance.webm");
+	//cv::VideoCapture cap("surveillance.webm");
+	cv::VideoCapture cap("video.avi");
 	if(!cap.isOpened())
 	{
 		exit(-1);
