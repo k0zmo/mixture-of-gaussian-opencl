@@ -12,17 +12,13 @@ int main(int, char**)
 		exit(-1);
 	}
 
-	// Create two  windows
-	cv::Mat frame;
-	cv::namedWindow("Mixture of Guassian",1);
-	cv::namedWindow("Original video", 1);
-
 	// default parameters
 	cv::BackgroundSubtractorMOG MOG(200, 5, 0.7, 30*0.5);
 
 	for(;;)
 	{
 		// Get a new frame from camera
+		cv::Mat frame;
 		cap >> frame; 
 
 		// Convert it to grayscale
