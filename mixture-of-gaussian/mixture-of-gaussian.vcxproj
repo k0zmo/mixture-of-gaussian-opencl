@@ -89,9 +89,11 @@
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </ForcedIncludeFiles>
     </ClCompile>
+    <ClCompile Include="QPCTimer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h" />
+    <ClInclude Include="QPCTimer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

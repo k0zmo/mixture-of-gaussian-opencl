@@ -4,6 +4,7 @@
 #include <opencv2/video/video.hpp>
 
 #include <iostream>
+#include "QPCTimer.h"
 
 struct MixtureData
 {
@@ -186,6 +187,7 @@ int main(int, char**)
 	const int rows = static_cast<int>(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
 
 	MixtureOfGaussianCPU MOG(rows, cols);
+	QPCTimer timer;
 
 	for(;;)
 	{
@@ -200,8 +202,14 @@ int main(int, char**)
 		cvtColor(frame, frame, CV_BGR2GRAY);
 
 		// Estimate the background
+		double start = timer.currentTime();
+
 		cv::Mat	frameMask;
 		MOG(frame, frameMask, -1);
+
+		double stop = timer.currentTime();
+
+		std::cout << 1.0 / (stop - start) << std::endl;		
 
 		// Show them
 		cv::imshow("Mixture of Guassian", frameMask);
