@@ -11,8 +11,8 @@
 int main(int, char**)
 {
 	// Open sample video
-	//cv::VideoCapture cap("surveillance.webm");
-	cv::VideoCapture cap("video.avi");
+	cv::VideoCapture cap("surveillance.webm");
+	//cv::VideoCapture cap("video.avi");
 	if(!cap.isOpened())
 	{
 		exit(-1);
@@ -23,7 +23,8 @@ int main(int, char**)
 	const int rows = static_cast<int>(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
 
 	MixtureOfGaussianCPU MOG(rows, cols);
-	QPCTimer timer;
+	//cv::BackgroundSubtractorMOG MOG;
+	QPCTimer timer;;
 
 	for(;;)
 	{

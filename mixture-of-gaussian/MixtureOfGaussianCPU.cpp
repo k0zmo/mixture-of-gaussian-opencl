@@ -203,23 +203,33 @@ void MixtureOfGaussianCPU::calc_pix_impl(const uchar* src, uchar* dst,
 		}
 	}
 
-	// Determine background distribution
+	// No match is found with any of the K Gaussians.
+	// In this case, the pixel is classified as foreground
+	if(pdfMatched < 0)
+	{
+		*dst = 255;
+		return;
+	}
+
+	// If the Gaussian distribution is classified as a background one,
+	// the pixel is classified as background,
+	// otherwise pixel represents the foreground
 	weightSum = 0.0f;
 	for(int mix = 0; mix < nmixtures; ++mix)
 	{
+		// The first Gaussian distributions which exceed
+		// certain threshold (backgroundRatio) are retained for 
+		// a background distribution.
+
+		// The other distributions are considered
+		// to represent a foreground distribution
 		weightSum += mptr[mix].weight;
 
 		if(weightSum > backgroundRatio)
 		{
-			if(pdfMatched > mix)
-			{
-				*dst = 255;
-			}
-			else
-			{
-				*dst = 0;
-			}
-
+			*dst = pdfMatched > mix 
+				? 255 // foreground
+				: 0;  // background
 			return;
 		}
 	}
