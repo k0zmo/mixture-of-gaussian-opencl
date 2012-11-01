@@ -4,6 +4,12 @@
 
 namespace clw
 {
+	enum ECommandQueueProperty
+	{
+		OutOfOrderExecModeEnabled   = (1 << 0),
+		ProfilingEnabled            = (1 << 1)
+	};
+
 	class CommandQueue
 	{
 	public:
@@ -18,6 +24,9 @@ namespace clw
 		bool isNull() const { return id == 0; }
 		bool isProfilingEnabled() const;
 		bool isOutOfOrder() const;
+
+		void finish();
+		void flush();
 
 		cl_command_queue commandQueueId() const { return id; }
 		Context* context() const { return ctx; }
