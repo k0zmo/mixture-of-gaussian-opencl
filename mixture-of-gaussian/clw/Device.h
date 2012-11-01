@@ -35,6 +35,8 @@ namespace clw
 		bool supportsExtension(const char* ext) const;
 		bool supportsDouble() const;
 		bool supportsHalf() const;
+
+		cl_device_id deviceId() const { return id; }
 	private:
 		cl_device_id id;
 	};

@@ -17,4 +17,9 @@ namespace clw
 	class Program;
 	class Kernel;
 	class Event;
+
+	namespace detail
+	{
+		void reportError(const char* name, cl_int eid);
+	}
 }
