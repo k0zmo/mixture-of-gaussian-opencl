@@ -12,4 +12,9 @@ namespace clw
 	
 	class Platform;
 	class Device;
+	class Context;
+	class CommandQueue;
+	class Program;
+	class Kernel;
+	class Event;
 }

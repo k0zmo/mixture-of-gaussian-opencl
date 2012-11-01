@@ -33,6 +33,12 @@
     <ClCompile Include="clw\Device.cpp">
       <Filter>OpenCL Wrangler</Filter>
     </ClCompile>
+    <ClCompile Include="clw\Context.cpp">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClCompile>
+    <ClCompile Include="clw\CommandQueue.cpp">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -54,6 +60,12 @@
       <Filter>OpenCL Wrangler</Filter>
     </ClInclude>
     <ClInclude Include="clw\StlUtils.h">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\Context.h">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\CommandQueue.h">
       <Filter>OpenCL Wrangler</Filter>
     </ClInclude>
   </ItemGroup>

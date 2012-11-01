@@ -82,6 +82,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="clw\CommandQueue.cpp" />
+    <ClCompile Include="clw\Context.cpp" />
     <ClCompile Include="clw\Device.cpp" />
     <ClCompile Include="clw\Platform.cpp" />
     <ClCompile Include="main.cpp" />
@@ -97,6 +99,8 @@
     <ClCompile Include="QPCTimer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="clw\CommandQueue.h" />
+    <ClInclude Include="clw\Context.h" />
     <ClInclude Include="clw\Device.h" />
     <ClInclude Include="clw\Platform.h" />
     <ClInclude Include="clw\Prerequisites.h" />
