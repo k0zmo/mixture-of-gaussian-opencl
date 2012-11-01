@@ -8,11 +8,42 @@
 #include "QPCTimer.h"
 #include "MixtureOfGaussianCPU.h"
 
+#include "clw/Platform.h"
+#include "clw/Device.h"
+#include "clw/StlUtils.h"
+
 int main(int, char**)
 {
+	std::cout << "List of available platforms: \n";
+	std::vector<clw::Platform> platforms = clw::availablePlatforms();
+	clw::for_each(platforms, [=](const clw::Platform& platform)
+	{
+		std::cout << "  * " << platform.name() 
+			<< ", " << platform.versionString() << std::endl;
+	});
+
+	std::cout << "\nList of available devices: \n";
+
+	std::vector<clw::Device> devs = clw::allDevices();
+	clw::for_each(devs, [=](const clw::Device& device)
+	{
+		std::cout << "  * " << device.name() << std::endl;
+		std::cout << "  \t-> " << device.version() << std::endl;
+		std::cout << "  \t-> " << device.vendor() << std::endl;
+		std::cout << "  \t-> " << device.driverVersion() << std::endl;
+		std::cout << "  \t-> supports double precision: " << (device.supportsDouble() ? "yes" : "no") << std::endl;
+		std::cout << "  \t-> supports galf precision: " << (device.supportsHalf() ? "yes" : "no") << std::endl;
+		std::cout << "  \t-> list of suported extensions: \n";
+
+		std::vector<std::string> exts = device.extensions();
+		clw::for_each(exts, [=](const std::string& ext)
+		{
+			std::cout << "  \t     " << ext << std::endl;
+		});
+	});
+#if 0
 	// Open sample video
 	cv::VideoCapture cap("surveillance.webm");
-	//cv::VideoCapture cap("video.avi");
 	if(!cap.isOpened())
 	{
 		exit(-1);
@@ -56,4 +87,5 @@ int main(int, char**)
 		if(key >= 0)
 			break;
 	}
+#endif
 }

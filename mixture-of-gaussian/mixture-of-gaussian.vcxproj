@@ -33,10 +33,12 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\OpenCV_Debug.props" />
+    <Import Project="..\OpenCL.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\OpenCV_Release.props" />
+    <Import Project="..\OpenCL.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -80,6 +82,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="clw\Device.cpp" />
+    <ClCompile Include="clw\Platform.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MixtureOfGaussianCPU.cpp" />
     <ClCompile Include="Precompiled.cpp">
@@ -93,6 +97,10 @@
     <ClCompile Include="QPCTimer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="clw\Device.h" />
+    <ClInclude Include="clw\Platform.h" />
+    <ClInclude Include="clw\Prerequisites.h" />
+    <ClInclude Include="clw\StlUtils.h" />
     <ClInclude Include="MixtureOfGaussianCPU.h" />
     <ClInclude Include="Precompiled.h" />
     <ClInclude Include="QPCTimer.h" />

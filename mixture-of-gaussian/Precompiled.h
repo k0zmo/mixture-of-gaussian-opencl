@@ -6,3 +6,5 @@
 #include <opencv2/video/video.hpp>
 
 #include <iostream>
+
+#include <CL/cl.h>

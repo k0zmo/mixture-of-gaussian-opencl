@@ -9,7 +9,7 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
+    <Filter Include="OpenCL Wrangler">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
@@ -27,6 +27,12 @@
     <ClCompile Include="MixtureOfGaussianCPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="clw\Platform.cpp">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClCompile>
+    <ClCompile Include="clw\Device.cpp">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -37,6 +43,18 @@
     </ClInclude>
     <ClInclude Include="MixtureOfGaussianCPU.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\Platform.h">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\Prerequisites.h">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\Device.h">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\StlUtils.h">
+      <Filter>OpenCL Wrangler</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
