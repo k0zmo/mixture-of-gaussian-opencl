@@ -9,9 +9,9 @@ namespace clw
 			cl_uint num;
 			if(clGetPlatformIDs(0, nullptr, &num) != CL_SUCCESS)
 				return vector<cl_platform_id>();
-			vector<cl_platform_id> platformIds(num);
-			clGetPlatformIDs(num, platformIds.data(), nullptr);
-			return platformIds;
+			vector<cl_platform_id> pids(num);
+			clGetPlatformIDs(num, pids.data(), nullptr);
+			return pids;
 		}
 
 		string platformInfo(cl_platform_id id, cl_platform_info name)
@@ -89,20 +89,20 @@ namespace clw
 
 	vector<Platform> availablePlatforms()
 	{
-		vector<cl_platform_id> platformIds = detail::getPlatformIDs();
-		if(platformIds.empty())
+		vector<cl_platform_id> pids = detail::getPlatformIDs();
+		if(pids.empty())
 			return vector<Platform>();
-		vector<Platform> platforms(platformIds.size());
-		for(size_t i = 0; i < platformIds.size(); ++i)
-			platforms[i] = Platform(platformIds[i]);
+		vector<Platform> platforms(pids.size());
+		for(size_t i = 0; i < pids.size(); ++i)
+			platforms[i] = Platform(pids[i]);
 		return platforms;
 	}
 
 	Platform defaultPlatform()
 	{
-		cl_platform_id platformId;
-		if(clGetPlatformIDs(1, &platformId, nullptr) != CL_SUCCESS)
+		cl_platform_id pid;
+		if(clGetPlatformIDs(1, &pid, nullptr) != CL_SUCCESS)
 			return Platform();
-		return Platform(platformId);
+		return Platform(pid);
 	}
 }
