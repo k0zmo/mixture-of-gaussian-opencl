@@ -199,6 +199,11 @@ namespace clw
 		return detail::deviceInfo<string>(id, CL_DRIVER_VERSION);
 	}
 
+	string Device::languageVersion() const
+	{
+		return detail::deviceInfo<string>(id, CL_DEVICE_OPENCL_C_VERSION);
+	}
+
 	vector<string> Device::extensions() const
 	{
 		string list = detail::deviceInfo<string>(id, CL_DEVICE_EXTENSIONS);

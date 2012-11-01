@@ -29,6 +29,7 @@ namespace clw
 		string name() const;
 		string vendor() const;
 		string driverVersion() const;
+		string languageVersion() const;
 		vector<string> extensions() const;
 
 		bool supportsExtension(const char* ext) const;

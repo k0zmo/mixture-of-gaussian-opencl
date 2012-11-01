@@ -31,6 +31,7 @@ int main(int, char**)
 		std::cout << "  \t-> " << device.version() << std::endl;
 		std::cout << "  \t-> " << device.vendor() << std::endl;
 		std::cout << "  \t-> " << device.driverVersion() << std::endl;
+		std::cout << "  \t-> language version: " << device.languageVersion() << std::endl;
 		std::cout << "  \t-> supports double precision: " << (device.supportsDouble() ? "yes" : "no") << std::endl;
 		std::cout << "  \t-> supports galf precision: " << (device.supportsHalf() ? "yes" : "no") << std::endl;
 		std::cout << "  \t-> list of suported extensions: \n";
