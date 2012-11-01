@@ -12,7 +12,7 @@ namespace clw
 			        sizeof(cl_command_queue_properties), &props, nullptr))
 					    != CL_SUCCESS)
 			{
-				detail::reportError("commandQueueInfo: ", error);
+				detail::reportError("commandQueueInfo(): ", error);
 				return false;
 			}
 			return (props & prop) != 0;
@@ -56,12 +56,12 @@ namespace clw
 	void CommandQueue::finish()
 	{
 		cl_int err = clFinish(id);
-		detail::reportError("CommandQueue::finish: ", err);
+		detail::reportError("CommandQueue::finish(): ", err);
 	}
 
 	void CommandQueue::flush()
 	{
 		cl_int err = clFlush(id);
-		detail::reportError("CommandQueue::flush: ", err);
+		detail::reportError("CommandQueue::flush(): ", err);
 	}
 }

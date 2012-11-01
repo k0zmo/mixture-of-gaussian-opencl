@@ -180,7 +180,7 @@ namespace clw
 		if(!isCreated || device.isNull())
 			return CommandQueue();
 		cl_command_queue cid = clCreateCommandQueue(id, device.deviceId(), properties, &eid);
-		detail::reportError("Context::createCommandQueue: ", eid);
+		detail::reportError("Context::createCommandQueue(): ", eid);
 		return cid ? CommandQueue(this, cid) : CommandQueue();
 	}
 

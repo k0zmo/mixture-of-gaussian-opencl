@@ -10,9 +10,13 @@ namespace clw
 		Value deviceInfo(cl_device_id id, cl_device_info info)
 		{
 			Value value;
-			if(!id || clGetDeviceInfo(id, info, 
-				    sizeof(Value), &value, nullptr) != CL_SUCCESS)
+			cl_int error;
+			if(!id || (error = clGetDeviceInfo(id, info, 
+				    sizeof(Value), &value, nullptr)) != CL_SUCCESS)
+			{
+				reportError("deviceInfo(): ", error);
 				return Value(0);
+			}
 			return value;
 		}
 
@@ -27,8 +31,13 @@ namespace clw
 		string deviceInfo(cl_device_id id, cl_device_info info)
 		{
 			size_t size;
-			if(!id || clGetDeviceInfo(id, info, 0, 0, &size) != CL_SUCCESS)
+			cl_int error;
+			if(!id || (error = clGetDeviceInfo(id, info, 0, 0, &size))
+			        != CL_SUCCESS)
+			{
+				reportError("deviceInfo(): ", error);
 				return string();
+			}
 			vector<char> buf(size);
 			clGetDeviceInfo(id, info, size, buf.data(), &size);
 			return string(buf.data());
@@ -141,22 +150,12 @@ namespace clw
 
 	EDeviceType Device::deviceType() const
 	{
-		/*cl_device_type devtype;
-		if(!id || clGetDeviceInfo(id, CL_DEVICE_TYPE, 
-			    sizeof(cl_device_type), &devtype, nullptr) != CL_SUCCESS)
-			return EDeviceType::Undefined;
-		return EDeviceType(devtype);*/
 		return EDeviceType(detail::deviceInfo<cl_device_type>
 			(id, CL_DEVICE_TYPE));
 	}
 
 	Platform Device::platform() const
 	{
-		/*cl_platform_id plID;
-		if(!id || clGetDeviceInfo(id, CL_DEVICE_PLATFORM, 
-			    sizeof(cl_platform_id), &plID, nullptr) != CL_SUCCESS)
-			return Platform();
-		return Platform(plID);*/
 		return Platform(detail::deviceInfo<cl_platform_id>
 			(id, CL_DEVICE_PLATFORM));
 	}
@@ -217,9 +216,13 @@ namespace clw
 		clw::for_each(platforms, [&devices](const Platform& platform)
 		{
 			size_t size;
-			if(clGetDeviceIDs(platform.platformId(), CL_DEVICE_TYPE_ALL,
-					0, nullptr, &size) != CL_SUCCESS)
+			cl_int error;
+			if((error = clGetDeviceIDs(platform.platformId(), CL_DEVICE_TYPE_ALL,
+					0, nullptr, &size)) != CL_SUCCESS)
+			{
+				detail::reportError("allDevices(): ", error);
 				return; // works like continue in ordinary loop
+			}
 			vector<cl_device_id> buf(size);
 			clGetDeviceIDs(platform.platformId(), CL_DEVICE_TYPE_ALL,
 				size, buf.data(), &size);
@@ -232,10 +235,14 @@ namespace clw
 	vector<Device> devices(EDeviceType deviceTypes, const Platform& platform)
 	{
 		size_t size;
+		cl_int error;
 		if(platform.isNull() || 
-			    clGetDeviceIDs(platform.platformId(), deviceTypes, 
-				               0, nullptr, &size) != CL_SUCCESS)
+			    (error = clGetDeviceIDs(platform.platformId(), deviceTypes, 
+				               0, nullptr, &size)) != CL_SUCCESS)
+		{
+			detail::reportError("devices(): ", error);
 			return vector<Device>();
+		}
 		vector<cl_device_id> buf(size);
 		clGetDeviceIDs(platform.platformId(), deviceTypes,
 		               size, buf.data(), &size);
