@@ -1,5 +1,9 @@
 #include "MixtureOfGaussianCPU.h"
 
+#ifdef HAVE_TBB
+#include <tbb/tbb.h>
+#endif
+
 MixtureOfGaussianCPU::MixtureOfGaussianCPU(int rows, int cols, int history)
 	: rows(rows)
 	, cols(cols)
@@ -239,6 +243,8 @@ void MixtureOfGaussianCPU::calc_pix_impl(const uchar* src, uchar* dst,
 void MixtureOfGaussianCPU::calc_impl(uchar* frame, uchar* mask,
 	MixtureData* mptr, float alpha)
 {
+#ifndef HAVE_TBB
+
 	for(int y = 0; y < rows; ++y)
 	{
 		const uchar* src = &frame[y * cols];
@@ -249,4 +255,22 @@ void MixtureOfGaussianCPU::calc_impl(uchar* frame, uchar* mask,
 			calc_pix_impl(&src[x], &dst[x], mptr, alpha);
 		}
 	}
+#else
+	tbb::parallel_for(tbb::blocked_range<int>(0, rows),
+		[&](const tbb::blocked_range<int>& range)
+	{
+		MixtureData* mptr_local = mptr + range.begin() * cols * nmixtures;
+
+		for(int y = range.begin(); y < range.end(); ++y)
+		{
+			const uchar* src = &frame[y * cols];
+			uchar* dst = &mask[y * cols];
+
+			for(int x = 0; x < cols; ++x, mptr_local += nmixtures)
+			{
+				calc_pix_impl(&src[x], &dst[x], mptr_local, alpha);
+			}
+		}
+	});
+#endif
 }
