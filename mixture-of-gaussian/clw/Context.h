@@ -11,7 +11,7 @@ namespace clw
 		Context();
 		~Context();
 
-		bool create(EDeviceType type);
+		bool create(EDeviceType type = EDeviceType::Default);
 		bool create(const vector<Device>& devices);
 		void release();
 
@@ -21,10 +21,12 @@ namespace clw
 		CommandQueue createCommandQueue(cl_command_queue_properties properties,
 		                                const Device& device);
 
+		const vector<Device>& devices() const { return devs; }
 		cl_context contextId() const { return id; }
 	private:
 		cl_context id;
 		bool isCreated;
 		cl_int eid;
+		vector<Device> devs;
 	};
 }

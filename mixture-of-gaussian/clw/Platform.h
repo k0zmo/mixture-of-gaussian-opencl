@@ -28,6 +28,8 @@ namespace clw
 
 		cl_platform_id platformId() const { return id; }
 
+		// !TODO: unloadCompiler(); - only for 1.2
+
 	private:
 		cl_platform_id id;
 	};

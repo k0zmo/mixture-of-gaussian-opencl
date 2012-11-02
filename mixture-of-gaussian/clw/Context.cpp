@@ -116,10 +116,10 @@ namespace clw
 	{
 		if(isCreated)
 			return true;
-		vector<Platform> pls = availablePlatforms();
+		vector<Platform> pls = clw::availablePlatforms();
 		for(size_t i = 0; i < pls.size(); ++i)
 		{
-			vector<Device> devs = devices(type, pls[i]);
+			vector<Device> devs = clw::devices(type, pls[i]);
 			for(size_t j = 0; j < devs.size(); ++j)
 			{
 				cl_device_id did = devs[j].deviceId();
@@ -130,6 +130,8 @@ namespace clw
 				if((id = clCreateContext(props, 1, &did, 
 					    &detail::contextNotify, nullptr, &eid)) == CL_SUCCESS)
 				{
+					devs.clear();
+					devs.push_back(Device(did));
 					isCreated = true;
 					return true;
 				}
@@ -157,8 +159,15 @@ namespace clw
 		if((id = clCreateContext(props, dids.size(), dids.data(), 
 		        &detail::contextNotify, nullptr, &eid)) == CL_SUCCESS)
 		{
-			isCreated = true;
-			return true;
+			size_t size;
+			if((eid = clGetContextInfo(id, CL_CONTEXT_DEVICES, 0,
+			        nullptr, &size)) == CL_SUCCESS)
+			{
+				// !FIXME: assert(size == dids.size())
+				devs = devices;
+				isCreated = true;
+				return true;
+			}			
 		}
 		detail::reportError("Context::create(devices): ", eid);
 		return false;
