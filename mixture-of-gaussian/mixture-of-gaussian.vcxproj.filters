@@ -45,6 +45,9 @@
     <ClCompile Include="clw\Kernel.cpp">
       <Filter>OpenCL Wrangler</Filter>
     </ClCompile>
+    <ClCompile Include="clw\MemoryObject.cpp">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -81,6 +84,9 @@
       <Filter>OpenCL Wrangler</Filter>
     </ClInclude>
     <ClInclude Include="clw\clw.h">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\MemoryObject.h">
       <Filter>OpenCL Wrangler</Filter>
     </ClInclude>
   </ItemGroup>

@@ -7,3 +7,4 @@
 #include "CommandQueue.h"
 #include "Program.h"
 #include "Kernel.h"
+#include "MemoryObject.h"
