@@ -3,13 +3,14 @@
 #include "CommandQueue.h"
 #include "Program.h"
 
+#include <iostream>
 #include <fstream>
 
 namespace clw
 {
 	namespace detail
 	{
-		extern "C" static void CL_API_CALL contextNotify(const char* errInfo,
+		extern "C" void CL_API_CALL contextNotify(const char* errInfo,
 		                                                 const void* privateInfo,
 		                                                 size_t cb,
 		                                                 void* userData)
@@ -40,11 +41,6 @@ namespace clw
 			CASE(CL_MAP_FAILURE);
 			CASE(CL_MISALIGNED_SUB_BUFFER_OFFSET);
 			CASE(CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST);
-			CASE(CL_COMPILE_PROGRAM_FAILURE);
-			CASE(CL_LINKER_NOT_AVAILABLE);
-			CASE(CL_LINK_PROGRAM_FAILURE);
-			CASE(CL_DEVICE_PARTITION_FAILED);
-			CASE(CL_KERNEL_ARG_INFO_NOT_AVAILABLE);
 			CASE(CL_INVALID_VALUE);
 			CASE(CL_INVALID_DEVICE_TYPE);
 			CASE(CL_INVALID_PLATFORM);
@@ -80,15 +76,23 @@ namespace clw
 			CASE(CL_INVALID_MIP_LEVEL);
 			CASE(CL_INVALID_GLOBAL_WORK_SIZE);
 			CASE(CL_INVALID_PROPERTY);
+#ifdef HAVE_OPENCL_1_2
+			CASE(CL_COMPILE_PROGRAM_FAILURE);
+			CASE(CL_LINKER_NOT_AVAILABLE);
+			CASE(CL_LINK_PROGRAM_FAILURE);
+			CASE(CL_DEVICE_PARTITION_FAILED);
+			CASE(CL_KERNEL_ARG_INFO_NOT_AVAILABLE);
 			CASE(CL_INVALID_IMAGE_DESCRIPTOR);
 			CASE(CL_INVALID_COMPILER_OPTIONS);
 			CASE(CL_INVALID_LINKER_OPTIONS);
 			CASE(CL_INVALID_DEVICE_PARTITION_COUNT);
+#endif
 			// cl_khr_icd extension
 			CASE(CL_PLATFORM_NOT_FOUND_KHR);
 			// cl_khr_gl_sharing
 			CASE(CL_INVALID_GL_SHAREGROUP_REFERENCE_KHR);
-			default: return string("Error ") + std::to_string(unsigned long long(eid));
+			default: return string("Error ") + std::to_string(
+				static_cast<unsigned long long>(eid));
 			}
 			#undef CASE
 		}

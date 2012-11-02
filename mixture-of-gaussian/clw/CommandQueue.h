@@ -13,7 +13,7 @@ namespace clw
 	class CommandQueue
 	{
 	public:
-		CommandQueue() : id(0), ctx(nullptr) {}
+		CommandQueue() : ctx(nullptr), id(0) {}
 		CommandQueue(Context* ctx, cl_command_queue id)
 			: ctx(ctx), id(id) {}
 		~CommandQueue();

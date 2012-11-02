@@ -7,7 +7,7 @@ namespace clw
 {
 	namespace detail
 	{
-		extern "C" static void CL_API_CALL buildNotify(cl_program id, void* userData)
+		extern "C" void CL_API_CALL buildNotify(cl_program id, void* userData)
 		{
 			(void) id;
 			(void) userData;

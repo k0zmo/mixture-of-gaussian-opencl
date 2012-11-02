@@ -3,15 +3,17 @@
 #include <CL/cl_gl.h>
 
 #include <string>
-#include <map>
+#include <vector>
 #include <unordered_map>
 
+#ifdef _MSC_VER
 // nonstandard extension used: enum used in qualified name
 #pragma warning(disable:4482)
+#endif
 
 #define HAVE_OPENCL_1_0
 #define HAVE_OPENCL_1_1
-#define HAVE_OPENCL_1_2
+//#define HAVE_OPENCL_1_2
 
 namespace clw
 {

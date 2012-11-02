@@ -2,6 +2,8 @@
 #include "Platform.h"
 #include "StlUtils.h"
 
+#include <cstring>
+
 namespace clw 
 {
 	namespace detail
@@ -10,7 +12,7 @@ namespace clw
 		Value deviceInfo(cl_device_id id, cl_device_info info)
 		{
 			Value value;
-			cl_int error;
+			cl_int error = CL_SUCCESS;
 			if(!id || (error = clGetDeviceInfo(id, info, 
 				    sizeof(Value), &value, nullptr)) != CL_SUCCESS)
 			{
@@ -31,7 +33,7 @@ namespace clw
 		string deviceInfo(cl_device_id id, cl_device_info info)
 		{
 			size_t size;
-			cl_int error;
+			cl_int error = CL_SUCCESS;
 			if(!id || (error = clGetDeviceInfo(id, info, 0, 0, &size))
 			        != CL_SUCCESS)
 			{
@@ -215,7 +217,7 @@ namespace clw
 		vector<Device> devices;
 		clw::for_each(platforms, [&devices](const Platform& platform)
 		{
-			size_t size;
+			cl_uint size;
 			cl_int error;
 			if((error = clGetDeviceIDs(platform.platformId(), CL_DEVICE_TYPE_ALL,
 					0, nullptr, &size)) != CL_SUCCESS)
@@ -234,8 +236,8 @@ namespace clw
 
 	vector<Device> devices(EDeviceType deviceTypes, const Platform& platform)
 	{
-		size_t size;
-		cl_int error;
+		cl_uint size;
+		cl_int error = CL_SUCCESS;
 		if(platform.isNull() || 
 			    (error = clGetDeviceIDs(platform.platformId(), deviceTypes, 
 				               0, nullptr, &size)) != CL_SUCCESS)

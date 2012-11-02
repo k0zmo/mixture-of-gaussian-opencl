@@ -11,7 +11,7 @@ namespace clw
 		Gpu           = (1 << 2),
 		Accelerator   = (1 << 3),
 		Custom        = (1 << 4),
-		All           =  0xFFFFFFFF,
+		All           =  0xFFFFFFFF
 	};
 
 	class Device

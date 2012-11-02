@@ -21,7 +21,7 @@ namespace clw
 		Order_Luminance   = 0x10B9,
 		Order_Rx          = 0x10BA,
 		Order_RGx         = 0x10BB,
-		Order_RGBx        = 0x10BC,
+		Order_RGBx        = 0x10BC
 	};
 
 	enum EChannelType

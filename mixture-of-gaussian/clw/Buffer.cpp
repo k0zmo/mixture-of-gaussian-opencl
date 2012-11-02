@@ -20,6 +20,7 @@ namespace clw
 	}
 
 	Buffer::Buffer(const Buffer& other)
+		: MemoryObject()
 	{
 		setMemoryId(other.ctx, other.id);
 	}

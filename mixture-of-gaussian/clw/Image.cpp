@@ -21,6 +21,7 @@ namespace clw
 	}
 
 	Image2D::Image2D(const Image2D& other)
+		: MemoryObject()
 	{
 		setMemoryId(other.ctx, other.id);
 	}
@@ -37,8 +38,8 @@ namespace clw
 		{
 			cl_image_format iformat = detail::imageInfo<cl_image_format>
 				(memoryId(), CL_IMAGE_FORMAT);
-			fmt.order = EChannelOrder();
-			fmt.type = EChannelType();
+			fmt.order = EChannelOrder(iformat.image_channel_order);
+			fmt.type = EChannelType(iformat.image_channel_data_type);
 		}
 		return fmt;
 	}
@@ -64,6 +65,7 @@ namespace clw
 	}
 
 	Image3D::Image3D(const Image3D& other)
+		: MemoryObject()
 	{
 		setMemoryId(other.ctx, other.id);
 	}
@@ -80,8 +82,8 @@ namespace clw
 		{
 			cl_image_format iformat = detail::imageInfo<cl_image_format>
 				(memoryId(), CL_IMAGE_FORMAT);
-			fmt.order = EChannelOrder();
-			fmt.type = EChannelType();
+			fmt.order = EChannelOrder(iformat.image_channel_order);
+			fmt.type = EChannelType(iformat.image_channel_data_type);
 		}
 		return fmt;
 	}

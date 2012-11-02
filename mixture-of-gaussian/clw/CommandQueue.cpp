@@ -7,7 +7,7 @@ namespace clw
 		bool commandQueueInfo(cl_command_queue id, cl_ulong prop)
 		{
 			cl_command_queue_properties props;
-			cl_int error;
+			cl_int error = CL_SUCCESS;
 			if(!id || (error = clGetCommandQueueInfo(id, CL_QUEUE_PROPERTIES, 
 			        sizeof(cl_command_queue_properties), &props, nullptr))
 					    != CL_SUCCESS)

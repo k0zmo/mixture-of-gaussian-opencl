@@ -21,7 +21,7 @@ namespace clw
 		string platformInfo(cl_platform_id id, cl_platform_info name)
 		{
 			size_t size;
-			cl_int error;
+			cl_int error = CL_SUCCESS;
 			if(!id || (error = clGetPlatformInfo(id, name,
 			        0, nullptr, &size)) != CL_SUCCESS)
 			{

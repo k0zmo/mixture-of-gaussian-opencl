@@ -19,7 +19,7 @@ namespace clw
 		Type_Image2DArray   = 0x10F3,
 		Type_Image1D        = 0x10F4,
 		Type_Image1DArray   = 0x10F5,
-		Type_Image1DBuffer  = 0x10F6,
+		Type_Image1DBuffer  = 0x10F6
 	};
 
 	class MemoryObject
