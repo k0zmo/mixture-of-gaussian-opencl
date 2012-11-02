@@ -7,10 +7,7 @@
 
 #include "QPCTimer.h"
 #include "MixtureOfGaussianCPU.h"
-
-#include "clw/Platform.h"
-#include "clw/Device.h"
-#include "clw/StlUtils.h"
+#include "clw/clw.h"
 
 int main(int, char**)
 {
@@ -42,6 +39,17 @@ int main(int, char**)
 			std::cout << "  \t     " << ext << std::endl;
 		});
 	});
+
+	clw::Context context;
+	if(!context.create(clw::Gpu))
+	{
+		std::cerr << "couldn't create context, quitting\n";
+		std::exit(-1);
+	}
+	clw::Device device = context.devices()[0];
+	clw::CommandQueue queue = context.createCommandQueue(
+		clw::ProfilingEnabled, device);
+
 #if 0
 	// Open sample video
 	cv::VideoCapture cap("surveillance.webm");

@@ -101,6 +101,7 @@
     <ClCompile Include="QPCTimer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="clw\clw.h" />
     <ClInclude Include="clw\CommandQueue.h" />
     <ClInclude Include="clw\Context.h" />
     <ClInclude Include="clw\Device.h" />

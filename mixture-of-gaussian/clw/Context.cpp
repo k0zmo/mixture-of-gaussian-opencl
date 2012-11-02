@@ -119,16 +119,16 @@ namespace clw
 		vector<Platform> pls = clw::availablePlatforms();
 		for(size_t i = 0; i < pls.size(); ++i)
 		{
-			vector<Device> devs = clw::devices(type, pls[i]);
-			for(size_t j = 0; j < devs.size(); ++j)
+			vector<Device> devices = clw::devices(type, pls[i]);
+			for(size_t j = 0; j < devices.size(); ++j)
 			{
-				cl_device_id did = devs[j].deviceId();
+				cl_device_id did = devices[j].deviceId();
 				cl_context_properties props[] = {
 					CL_CONTEXT_PLATFORM, cl_context_properties(pls[i].platformId()),
 					0, 0
 				};
 				if((id = clCreateContext(props, 1, &did, 
-					    &detail::contextNotify, nullptr, &eid)) == CL_SUCCESS)
+					    &detail::contextNotify, nullptr, &eid)) != 0)
 				{
 					devs.clear();
 					devs.push_back(Device(did));
@@ -157,7 +157,7 @@ namespace clw
 			0, 0
 		};
 		if((id = clCreateContext(props, dids.size(), dids.data(), 
-		        &detail::contextNotify, nullptr, &eid)) == CL_SUCCESS)
+		        &detail::contextNotify, nullptr, &eid)) != 0)
 		{
 			size_t size;
 			if((eid = clGetContextInfo(id, CL_CONTEXT_DEVICES, 0,

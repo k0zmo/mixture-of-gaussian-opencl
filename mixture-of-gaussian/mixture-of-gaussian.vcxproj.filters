@@ -80,5 +80,8 @@
     <ClInclude Include="clw\Kernel.h">
       <Filter>OpenCL Wrangler</Filter>
     </ClInclude>
+    <ClInclude Include="clw\clw.h">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
