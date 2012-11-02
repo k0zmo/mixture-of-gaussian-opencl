@@ -11,44 +11,53 @@
 
 int main(int, char**)
 {
-	std::cout << "List of available platforms: \n";
-	std::vector<clw::Platform> platforms = clw::availablePlatforms();
-	clw::for_each(platforms, [=](const clw::Platform& platform)
+	if(0)
 	{
-		std::cout << "  * " << platform.name() 
-			<< ", " << platform.versionString() << std::endl;
-	});
-
-	std::cout << "\nList of available devices: \n";
-
-	std::vector<clw::Device> devs = clw::allDevices();
-	clw::for_each(devs, [=](const clw::Device& device)
-	{
-		std::cout << "  * " << device.name() << std::endl;
-		std::cout << "  \t-> " << device.version() << std::endl;
-		std::cout << "  \t-> " << device.vendor() << std::endl;
-		std::cout << "  \t-> " << device.driverVersion() << std::endl;
-		std::cout << "  \t-> language version: " << device.languageVersion() << std::endl;
-		std::cout << "  \t-> supports double precision: " << (device.supportsDouble() ? "yes" : "no") << std::endl;
-		std::cout << "  \t-> supports galf precision: " << (device.supportsHalf() ? "yes" : "no") << std::endl;
-		std::cout << "  \t-> list of suported extensions: \n";
-
-		std::vector<std::string> exts = device.extensions();
-		clw::for_each(exts, [=](const std::string& ext)
+		std::cout << "List of available platforms: \n";
+		std::vector<clw::Platform> platforms = clw::availablePlatforms();
+		clw::for_each(platforms, [=](const clw::Platform& platform)
 		{
-			std::cout << "  \t     " << ext << std::endl;
+			std::cout << "  * " << platform.name() 
+				<< ", " << platform.versionString() << std::endl;
 		});
-	});
+
+		std::cout << "\nList of available devices: \n";
+
+		std::vector<clw::Device> devs = clw::allDevices();
+		clw::for_each(devs, [=](const clw::Device& device)
+		{
+			std::cout << "  * " << device.name() << std::endl;
+			std::cout << "  \t-> " << device.version() << std::endl;
+			std::cout << "  \t-> " << device.vendor() << std::endl;
+			std::cout << "  \t-> " << device.driverVersion() << std::endl;
+			std::cout << "  \t-> language version: " << device.languageVersion() << std::endl;
+			std::cout << "  \t-> supports double precision: " << (device.supportsDouble() ? "yes" : "no") << std::endl;
+			std::cout << "  \t-> supports galf precision: " << (device.supportsHalf() ? "yes" : "no") << std::endl;
+			std::cout << "  \t-> list of suported extensions: \n";
+
+			std::vector<std::string> exts = device.extensions();
+			clw::for_each(exts, [=](const std::string& ext)
+			{
+				std::cout << "  \t     " << ext << std::endl;
+			});
+		});
+	}
 
 	clw::Context context;
-	if(!context.create(clw::Gpu))
+	//if(!context.create(clw::devices(clw::All, clw::defaultPlatform())))
+	if(!context.create(clw::Default))
 	{
 		std::cerr << "couldn't create context, quitting\n";
 		std::exit(-1);
 	}
 	clw::Device device = context.devices()[0];
+	std:: cout << device.name() << "\n\n";
+
 	clw::CommandQueue queue = context.createCommandQueue(
-		clw::ProfilingEnabled, device);
+		clw::Property_ProfilingEnabled, device);
+
+	clw::Program prog = context.buildProgramFromSourceFile("kernel2.cl");
+	clw::Kernel kernel = prog.createKernel("gaussian");
 
 #if 0
 	// Open sample video

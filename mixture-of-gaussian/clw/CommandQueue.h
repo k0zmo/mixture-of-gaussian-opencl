@@ -6,8 +6,8 @@ namespace clw
 {
 	enum ECommandQueueProperty
 	{
-		OutOfOrderExecModeEnabled   = (1 << 0),
-		ProfilingEnabled            = (1 << 1)
+		Property_OutOfOrderExecModeEnabled   = (1 << 0),
+		Property_ProfilingEnabled            = (1 << 1)
 	};
 
 	class CommandQueue
