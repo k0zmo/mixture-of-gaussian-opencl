@@ -51,6 +51,9 @@
     <ClCompile Include="clw\Buffer.cpp">
       <Filter>OpenCL Wrangler</Filter>
     </ClCompile>
+    <ClCompile Include="clw\Image.cpp">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -93,6 +96,9 @@
       <Filter>OpenCL Wrangler</Filter>
     </ClInclude>
     <ClInclude Include="clw\Buffer.h">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\Image.h">
       <Filter>OpenCL Wrangler</Filter>
     </ClInclude>
   </ItemGroup>
