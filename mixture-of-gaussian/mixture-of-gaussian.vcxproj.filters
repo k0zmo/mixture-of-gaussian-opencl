@@ -42,6 +42,9 @@
     <ClCompile Include="clw\Program.cpp">
       <Filter>OpenCL Wrangler</Filter>
     </ClCompile>
+    <ClCompile Include="clw\Kernel.cpp">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -72,6 +75,9 @@
       <Filter>OpenCL Wrangler</Filter>
     </ClInclude>
     <ClInclude Include="clw\Program.h">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\Kernel.h">
       <Filter>OpenCL Wrangler</Filter>
     </ClInclude>
   </ItemGroup>

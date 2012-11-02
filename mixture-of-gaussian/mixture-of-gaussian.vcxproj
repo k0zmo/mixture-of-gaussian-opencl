@@ -85,6 +85,7 @@
     <ClCompile Include="clw\CommandQueue.cpp" />
     <ClCompile Include="clw\Context.cpp" />
     <ClCompile Include="clw\Device.cpp" />
+    <ClCompile Include="clw\Kernel.cpp" />
     <ClCompile Include="clw\Platform.cpp" />
     <ClCompile Include="clw\Program.cpp" />
     <ClCompile Include="main.cpp" />
@@ -103,6 +104,7 @@
     <ClInclude Include="clw\CommandQueue.h" />
     <ClInclude Include="clw\Context.h" />
     <ClInclude Include="clw\Device.h" />
+    <ClInclude Include="clw\Kernel.h" />
     <ClInclude Include="clw\Platform.h" />
     <ClInclude Include="clw\Prerequisites.h" />
     <ClInclude Include="clw\Program.h" />

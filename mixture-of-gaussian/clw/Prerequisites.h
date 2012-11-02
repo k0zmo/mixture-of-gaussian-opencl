@@ -19,8 +19,8 @@ namespace clw
 	class Device;
 	class Context;
 	class CommandQueue;
-	//class Program;
-	//class Kernel;
+	class Program;
+	class Kernel;
 	//class Event;
 	//class Buffer;
 	//class Image2D;

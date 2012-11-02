@@ -30,6 +30,10 @@ namespace clw
 		vector<Device> devices() const;
 		string sourceCode() const;
 		vector<ByteCode> binaries() const;
+
+		Kernel createKernel(const char* name) const;
+		Kernel createKernel(const string& name) const;
+		vector<Kernel> createKernels() const;
 		
 	private:
 		Context* ctx;

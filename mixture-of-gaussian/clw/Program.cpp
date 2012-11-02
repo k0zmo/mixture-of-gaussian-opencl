@@ -1,5 +1,6 @@
 #include "Program.h"
 #include "Context.h"
+#include "Kernel.h"
 #include "StlUtils.h"
 
 namespace clw
@@ -73,7 +74,6 @@ namespace clw
 		cl_int error = clBuildProgram(id, 0, nullptr, 
 		                              options.c_str(), 
 		                              &detail::buildNotify, nullptr);
-		ctx->setLastError(error);
 		detail::reportError("Program::build(): ", error);
 		return error == CL_SUCCESS;
 	}
@@ -173,5 +173,43 @@ namespace clw
 			return vector<ByteCode>();
 		}
 		return bins;
+	}
+
+	Kernel Program::createKernel(const char* name) const
+	{
+		cl_int error;
+		cl_kernel kernel = clCreateKernel(id, name, &error);
+		if(error == CL_SUCCESS && kernel)
+			return Kernel(ctx, kernel);
+		detail::reportError("Program::createKernel(): ", error);
+		return Kernel();
+	}
+
+	Kernel Program::createKernel(const string& name) const
+	{
+		return createKernel(name.c_str());
+	}
+
+	vector<Kernel> Program::createKernels() const
+	{
+		vector<Kernel> vec;
+		cl_uint size;
+		cl_int error;
+		if((error = clCreateKernelsInProgram(id, 0,
+		        nullptr, &size)) != CL_SUCCESS)
+		{
+			detail::reportError("Program::createKernels(): ", error);
+			return vec;
+		}
+		vector<cl_kernel> buf(size);
+		if(clCreateKernelsInProgram(id, size, 
+		        buf.data(), nullptr) != CL_SUCCESS)
+		{
+			detail::reportError("Program::createKernels(): ", error);
+			return vec;
+		}
+		for(cl_uint i = 0; i < size; ++i)
+			vec.push_back(Kernel(ctx, buf[i]));
+		return vec;
 	}
 }
