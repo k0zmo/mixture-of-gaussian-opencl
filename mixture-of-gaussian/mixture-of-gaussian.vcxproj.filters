@@ -39,6 +39,9 @@
     <ClCompile Include="clw\CommandQueue.cpp">
       <Filter>OpenCL Wrangler</Filter>
     </ClCompile>
+    <ClCompile Include="clw\Program.cpp">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -66,6 +69,9 @@
       <Filter>OpenCL Wrangler</Filter>
     </ClInclude>
     <ClInclude Include="clw\CommandQueue.h">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\Program.h">
       <Filter>OpenCL Wrangler</Filter>
     </ClInclude>
   </ItemGroup>

@@ -86,6 +86,7 @@
     <ClCompile Include="clw\Context.cpp" />
     <ClCompile Include="clw\Device.cpp" />
     <ClCompile Include="clw\Platform.cpp" />
+    <ClCompile Include="clw\Program.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MixtureOfGaussianCPU.cpp" />
     <ClCompile Include="Precompiled.cpp">
@@ -104,6 +105,7 @@
     <ClInclude Include="clw\Device.h" />
     <ClInclude Include="clw\Platform.h" />
     <ClInclude Include="clw\Prerequisites.h" />
+    <ClInclude Include="clw\Program.h" />
     <ClInclude Include="clw\StlUtils.h" />
     <ClInclude Include="MixtureOfGaussianCPU.h" />
     <ClInclude Include="Precompiled.h" />
