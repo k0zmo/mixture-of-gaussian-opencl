@@ -13,16 +13,13 @@ namespace clw
 
 	enum EType
 	{
-		Type_Undefined      = 0,
-		Type_Buffer         = CL_MEM_OBJECT_BUFFER,
-		Type_Image2D        = CL_MEM_OBJECT_IMAGE2D,
-		Type_Image3D        = CL_MEM_OBJECT_IMAGE3D,
-#ifdef HAVE_OPENCL_1_2
-		Type_Image2DArray   = CL_MEM_OBJECT_IMAGE2D_ARRAY,
-		Type_Image1D        = CL_MEM_OBJECT_IMAGE1D,
-		Type_Image1DArray   = CL_MEM_OBJECT_IMAGE1D_ARRAY,
-		Type_Image1DBuffer  = CL_MEM_OBJECT_IMAGE1D_BUFFER,
-#endif
+		Type_Buffer         = 0x10F0,
+		Type_Image2D        = 0x10F1,
+		Type_Image3D        = 0x10F2,
+		Type_Image2DArray   = 0x10F3,
+		Type_Image1D        = 0x10F4,
+		Type_Image1DArray   = 0x10F5,
+		Type_Image1DBuffer  = 0x10F6,
 	};
 
 	class MemoryObject

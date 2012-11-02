@@ -48,14 +48,14 @@ namespace clw
 
 		string ver = detail::platformInfo(id, CL_PLATFORM_VERSION);
 		if(!prefix.compare(0, prefix.length(), ver))
-			return EPlatformVersion::Version_Undefined;
+			return EPlatformVersion(0);
 
 		ver = ver.substr(prefix.length());
 		string::size_type pos = 0;
 		while(ver[pos] != '.' && pos < ver.length())
 			++pos;
 		if(pos == ver.length())
-			return EPlatformVersion::Version_Undefined;
+			return EPlatformVersion(0);
 
 		int major = std::stoi(ver.substr(0, pos));
 		string::size_type mpos = pos + 1;
@@ -63,7 +63,7 @@ namespace clw
 		while(ver[mpos] != ' ' && mpos < ver.length())
 			++mpos;
 		if(mpos == ver.length())
-			return EPlatformVersion::Version_Undefined;
+			return EPlatformVersion(0);
 
 		int minor = std::stoi(ver.substr(pos+1, mpos-(pos+1)));
 
@@ -77,7 +77,7 @@ namespace clw
 			case 2: return EPlatformVersion::Version_1_2;
 			}
 		default:
-			return EPlatformVersion::Version_Undefined;
+			return EPlatformVersion(0);
 		}
 	}
 

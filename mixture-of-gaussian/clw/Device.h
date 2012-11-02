@@ -6,7 +6,6 @@ namespace clw
 {
 	enum EDeviceType
 	{
-		Undefined     = 0,
 		Default       = (1 << 0),
 		Cpu           = (1 << 1),
 		Gpu           = (1 << 2),

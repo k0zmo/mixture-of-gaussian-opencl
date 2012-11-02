@@ -6,7 +6,6 @@ namespace clw
 {
 	enum EPlatformVersion
 	{
-		Version_Undefined = 0,
 		Version_1_0 = 1,
 		Version_1_1 = 2,
 		Version_1_2 = 3
