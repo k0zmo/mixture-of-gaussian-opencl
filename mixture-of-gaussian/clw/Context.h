@@ -27,8 +27,9 @@ namespace clw
 		Program createProgramFromSourceCode(const string& sourceCode);
 		Program createProgramFromSourceFile(const string& fileName);
 
-		//Program buildProgramFromSourceCode(const char* sourceCode);
-		//Program buildProgramFromSourceFile(const char* fileName);
+		Program buildProgramFromSourceCode(const string& sourceCode);
+		Program buildProgramFromSourceFile(const string& fileName);
+
 	private:
 		cl_context id;
 		bool isCreated;

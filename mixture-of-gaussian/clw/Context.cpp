@@ -226,4 +226,20 @@ namespace clw
 			return Program();
 		return createProgramFromSourceCode(sourceCode);
 	}
+
+	Program Context::buildProgramFromSourceCode(const string& sourceCode)
+	{
+		Program program = createProgramFromSourceCode(sourceCode);
+		if(program.isNull() || program.build())
+			return program;
+		return Program();
+	}
+
+	Program Context::buildProgramFromSourceFile(const string& fileName)
+	{
+		Program program = createProgramFromSourceFile(fileName);
+		if(program.isNull() || program.build())
+			return program;
+		return Program();
+	}
 }
