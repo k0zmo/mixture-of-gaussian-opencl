@@ -1,8 +1,9 @@
 #include "Context.h"
 #include "Platform.h"
 #include "CommandQueue.h"
+#include "Program.h"
 
-//#include <iostream>
+#include <fstream>
 
 namespace clw
 {
@@ -97,6 +98,24 @@ namespace clw
 			if(eid != CL_SUCCESS)
 				std::cerr << name << errorName(eid) << std::endl;;
 		}
+
+		bool readAsString(const string& filename, string* contents)
+		{
+			std::ifstream strm;
+			strm.open(filename.c_str(), std::ios::binary | std::ios_base::in);
+			if(!strm.is_open())
+			{
+				std::cerr << "Unable to open file " << filename << std::endl;
+				return false;
+			}
+			strm.seekg(0, std::ios::end);
+			contents->reserve(static_cast<size_t>(strm.tellg()));
+			strm.seekg(0);
+
+			contents->assign(std::istreambuf_iterator<char>(strm),
+				std::istreambuf_iterator<char>());
+			return true;
+		}
 	}
 
 	Context::Context() 
@@ -186,11 +205,25 @@ namespace clw
 	CommandQueue Context::createCommandQueue(cl_command_queue_properties properties,
 	                                              const Device& device)
 	{
-		if(!isCreated || device.isNull())
-			return CommandQueue();
 		cl_command_queue cid = clCreateCommandQueue(id, device.deviceId(), properties, &eid);
 		detail::reportError("Context::createCommandQueue(): ", eid);
 		return cid ? CommandQueue(this, cid) : CommandQueue();
 	}
 
+	Program Context::createProgramFromSourceCode(const string& sourceCode)
+	{
+		size_t length = sourceCode.length();
+		const char* code = sourceCode.c_str();
+		cl_program pid = clCreateProgramWithSource(id, 1, &code, &length, &eid);
+		detail::reportError("Context::createProgramFromSourceCode(): ", eid);
+		return pid ? Program(this, pid) : Program();
+	}
+
+	Program Context::createProgramFromSourceFile(const string& fileName)
+	{
+		string sourceCode;
+		if(!detail::readAsString(fileName, &sourceCode))
+			return Program();
+		return createProgramFromSourceCode(sourceCode);
+	}
 }

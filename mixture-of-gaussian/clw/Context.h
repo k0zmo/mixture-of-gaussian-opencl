@@ -23,6 +23,12 @@ namespace clw
 
 		const vector<Device>& devices() const { return devs; }
 		cl_context contextId() const { return id; }
+
+		Program createProgramFromSourceCode(const string& sourceCode);
+		Program createProgramFromSourceFile(const string& fileName);
+
+		//Program buildProgramFromSourceCode(const char* sourceCode);
+		//Program buildProgramFromSourceFile(const char* fileName);
 	private:
 		cl_context id;
 		bool isCreated;

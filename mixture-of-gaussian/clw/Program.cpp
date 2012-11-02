@@ -11,7 +11,6 @@ namespace clw
 		{
 			(void) id;
 			(void) userData;
-			std::cerr << "Build notification" << std::endl;
 		}
 
 		template<typename Value>
@@ -118,7 +117,7 @@ namespace clw
 		if(size == 0)
 			return vector<Device>();
 		vector<cl_device_id> buf(size);
-		if(detail::programInfo(id, CL_PROGRAM_DEVICES, buf.data(), buf.size()))
+		if(!detail::programInfo(id, CL_PROGRAM_DEVICES, buf.data(), buf.size()))
 			return vector<Device>();
 		vector<Device> devs(size);
 		for(cl_uint i = 0; i < size; ++i)
