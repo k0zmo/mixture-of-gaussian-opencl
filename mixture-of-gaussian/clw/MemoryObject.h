@@ -6,22 +6,22 @@ namespace clw
 {
 	enum EAccess
 	{
-		ReadWrite    = (1 << 0),
-		WriteOnly    = (1 << 1),
-		ReadOnly     = (1 << 2)                        
+		Access_ReadWrite    = (1 << 0),
+		Access_WriteOnly    = (1 << 1),
+		Access_ReadOnly     = (1 << 2)                        
 	};
 
 	enum EType
 	{
-		UndefinedType   = 0,
-		Buffer          = CL_MEM_OBJECT_BUFFER,
-		Image2D         = CL_MEM_OBJECT_IMAGE2D,
-		Image3D         = CL_MEM_OBJECT_IMAGE3D,
+		Type_Undefined      = 0,
+		Type_Buffer         = CL_MEM_OBJECT_BUFFER,
+		Type_Image2D        = CL_MEM_OBJECT_IMAGE2D,
+		Type_Image3D        = CL_MEM_OBJECT_IMAGE3D,
 #ifdef HAVE_OPENCL_1_2
-		Image2DArray    = CL_MEM_OBJECT_IMAGE2D_ARRAY,
-		Image1D         = CL_MEM_OBJECT_IMAGE1D,
-		Image1DArray    = CL_MEM_OBJECT_IMAGE1D_ARRAY,
-		Image1DBuffer   = CL_MEM_OBJECT_IMAGE1D_BUFFER,
+		Type_Image2DArray   = CL_MEM_OBJECT_IMAGE2D_ARRAY,
+		Type_Image1D        = CL_MEM_OBJECT_IMAGE1D,
+		Type_Image1DArray   = CL_MEM_OBJECT_IMAGE1D_ARRAY,
+		Type_Image1DBuffer  = CL_MEM_OBJECT_IMAGE1D_BUFFER,
 #endif
 	};
 
@@ -45,7 +45,9 @@ namespace clw
 			: ctx(ctx), id(id) {}
 		~MemoryObject();
 
-	private:
+		void setMemoryId(Context* ctx, cl_mem id);
+
+	protected:
 		Context* ctx;
 		cl_mem id;
 

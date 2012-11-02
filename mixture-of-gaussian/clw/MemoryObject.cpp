@@ -53,4 +53,14 @@ namespace clw
 	{
 		return detail::memObjectInfo<size_t>(id, CL_MEM_SIZE);
 	}
+
+	void MemoryObject::setMemoryId(Context* ctx, cl_mem id)
+	{
+		this->ctx = ctx;
+		if (id)
+			clRetainMemObject(id);
+		if (this->id)
+			clReleaseMemObject(this->id);
+		this->id = id;
+	}
 }

@@ -8,3 +8,4 @@
 #include "Program.h"
 #include "Kernel.h"
 #include "MemoryObject.h"
+#include "Buffer.h"

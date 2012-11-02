@@ -82,6 +82,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="clw\Buffer.cpp" />
     <ClCompile Include="clw\CommandQueue.cpp" />
     <ClCompile Include="clw\Context.cpp" />
     <ClCompile Include="clw\Device.cpp" />
@@ -102,6 +103,7 @@
     <ClCompile Include="QPCTimer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="clw\Buffer.h" />
     <ClInclude Include="clw\clw.h" />
     <ClInclude Include="clw\CommandQueue.h" />
     <ClInclude Include="clw\Context.h" />

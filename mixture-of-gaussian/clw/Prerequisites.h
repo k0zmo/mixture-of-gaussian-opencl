@@ -9,6 +9,10 @@
 // nonstandard extension used: enum used in qualified name
 #pragma warning(disable:4482)
 
+#define HAVE_OPENCL_1_0
+#define HAVE_OPENCL_1_1
+#define HAVE_OPENCL_1_2
+
 namespace clw
 {
 	using std::vector;
