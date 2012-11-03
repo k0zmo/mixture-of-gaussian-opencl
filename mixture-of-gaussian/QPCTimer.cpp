@@ -19,7 +19,9 @@ double QPCTimer::currentTime()
 	QueryPerformanceCounter(&time);
 	return static_cast<double>(time.QuadPart) * periodTime;
 }
+
 #else
+
 QPCTimer::QPCTimer()
 {
 	gettimeofday(&start, nullptr);
@@ -31,4 +33,5 @@ double QPCTimer::currentTime()
 	gettimeofday(&current, nullptr);
 	return current.tv_sec - start.tv_sec + 0.000001f * (current.tv_usec - start.tv_usec);
 }
+
 #endif

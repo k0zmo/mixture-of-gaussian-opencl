@@ -258,19 +258,19 @@ void MixtureOfGaussianCPU::calc_impl(uchar* frame, uchar* mask,
 #else
 	tbb::parallel_for(tbb::blocked_range<int>(0, rows),
 		[&](const tbb::blocked_range<int>& range)
-	{
-		MixtureData* mptr_local = mptr + range.begin() * cols * nmixtures;
-
-		for(int y = range.begin(); y < range.end(); ++y)
 		{
-			const uchar* src = &frame[y * cols];
-			uchar* dst = &mask[y * cols];
+			MixtureData* mptr_local = mptr + range.begin() * cols * nmixtures;
 
-			for(int x = 0; x < cols; ++x, mptr_local += nmixtures)
+			for(int y = range.begin(); y < range.end(); ++y)
 			{
-				calc_pix_impl(&src[x], &dst[x], mptr_local, alpha);
+				const uchar* src = &frame[y * cols];
+				uchar* dst = &mask[y * cols];
+
+				for(int x = 0; x < cols; ++x, mptr_local += nmixtures)
+				{
+					calc_pix_impl(&src[x], &dst[x], mptr_local, alpha);
+				}
 			}
-		}
-	});
+		});
 #endif
 }
