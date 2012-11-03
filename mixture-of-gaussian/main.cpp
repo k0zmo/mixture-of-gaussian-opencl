@@ -11,7 +11,7 @@
 
 int main(int, char**)
 {
-	if(0)
+	if(1)
 	{
 		std::cout << "List of available platforms: \n";
 		std::vector<clw::Platform> platforms = clw::availablePlatforms();
@@ -41,6 +41,7 @@ int main(int, char**)
 				std::cout << "  \t     " << ext << std::endl;
 			});
 		});
+		std::cout << "\n\n";
 	}
 
 	clw::Context context;
@@ -51,13 +52,13 @@ int main(int, char**)
 		std::exit(-1);
 	}
 	clw::Device device = context.devices()[0];
-	std:: cout << device.name() << "\n\n";
+	std:: cout << "Default device: " << device.name() << "\n\n";
 
-	clw::CommandQueue queue = context.createCommandQueue(
-		clw::Property_ProfilingEnabled, device);
+	//clw::CommandQueue queue = context.createCommandQueue(
+	//	clw::Property_ProfilingEnabled, device);
 
-	clw::Program prog = context.buildProgramFromSourceFile("kernel2.cl");
-	clw::Kernel kernel = prog.createKernel("gaussian");
+	//clw::Program prog = context.buildProgramFromSourceFile("kernel2.cl");
+	//clw::Kernel kernel = prog.createKernel("gaussian");
 
 #if 0
 	// Open sample video
