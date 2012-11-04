@@ -27,7 +27,11 @@ namespace clw
 	}
 
 	Kernel::Kernel(const Kernel& other)
-		: ctx(other.ctx), id(other.id)
+		: ctx(other.ctx)
+		, id(other.id)
+		, gblWorkOffset(other.gblWorkOffset)
+		, gblWorkSize(other.gblWorkSize)
+		, lclWorkSize(other.lclWorkSize)
 	{
 		if(id)
 			clRetainKernel(id);
@@ -41,6 +45,9 @@ namespace clw
 		if(id)
 			clReleaseKernel(id);
 		id = other.id;
+		gblWorkOffset = other.gblWorkOffset;
+		gblWorkSize = other.gblWorkSize;
+		lclWorkSize = other.lclWorkSize;
 		return *this;
 	}
 
