@@ -9,7 +9,7 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="OpenCL Wrangler">
+    <Filter Include="OpenCL Wrapper">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
@@ -28,37 +28,37 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="clw\Platform.cpp">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
     <ClCompile Include="clw\Device.cpp">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
     <ClCompile Include="clw\Context.cpp">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
     <ClCompile Include="clw\CommandQueue.cpp">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
     <ClCompile Include="clw\Program.cpp">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
     <ClCompile Include="clw\Kernel.cpp">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
     <ClCompile Include="clw\MemoryObject.cpp">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
     <ClCompile Include="clw\Buffer.cpp">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
     <ClCompile Include="clw\Image.cpp">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
     <ClCompile Include="clw\details.cpp">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
     <ClCompile Include="clw\NDRange.cpp">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -72,43 +72,43 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="clw\Platform.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\Prerequisites.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\Device.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\StlUtils.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\Context.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\CommandQueue.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\Program.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\Kernel.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\clw.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\MemoryObject.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\Buffer.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\Image.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\NDRange.h">
-      <Filter>OpenCL Wrangler</Filter>
+      <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
