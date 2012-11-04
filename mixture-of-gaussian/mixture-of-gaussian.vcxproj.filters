@@ -60,6 +60,9 @@
     <ClCompile Include="clw\NDRange.cpp">
       <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
+    <ClCompile Include="clw\Event.cpp">
+      <Filter>OpenCL Wrapper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -108,6 +111,9 @@
       <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\NDRange.h">
+      <Filter>OpenCL Wrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\Event.h">
       <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
   </ItemGroup>

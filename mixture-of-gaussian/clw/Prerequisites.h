@@ -4,6 +4,7 @@
 #include <CL/cl_ext.h>
 #include <CL/cl_gl.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -22,18 +23,21 @@ namespace clw
 	using std::vector;
 	using std::string;
 	using std::unordered_map;
-	
+
 	class Platform;
 	class Device;
 	class Context;
 	class CommandQueue;
 	class Program;
 	class Kernel;
-	//class Event;
-	//class Buffer;
-	//class Image2D;
-	//class Image3D;
+	class MemoryObject;
+	class Buffer;
+	class Image2D;
+	class Image3D;
 	//class Sampler
+	class NDRange;
+	class Event;
+	class EventList;
 
 	namespace detail
 	{

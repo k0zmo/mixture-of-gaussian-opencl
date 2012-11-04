@@ -21,6 +21,7 @@ namespace clw
 		CommandQueue createCommandQueue(cl_command_queue_properties properties,
 		                                const Device& device);
 
+		size_t numDevices() const { return devs.size(); }
 		const vector<Device>& devices() const { return devs; }
 		cl_context contextId() const { return id; }
 

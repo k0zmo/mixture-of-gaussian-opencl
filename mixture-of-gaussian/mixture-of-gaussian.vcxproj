@@ -87,6 +87,7 @@
     <ClCompile Include="clw\Context.cpp" />
     <ClCompile Include="clw\details.cpp" />
     <ClCompile Include="clw\Device.cpp" />
+    <ClCompile Include="clw\Event.cpp" />
     <ClCompile Include="clw\Image.cpp" />
     <ClCompile Include="clw\Kernel.cpp" />
     <ClCompile Include="clw\MemoryObject.cpp" />
@@ -111,6 +112,7 @@
     <ClInclude Include="clw\CommandQueue.h" />
     <ClInclude Include="clw\Context.h" />
     <ClInclude Include="clw\Device.h" />
+    <ClInclude Include="clw\Event.h" />
     <ClInclude Include="clw\Image.h" />
     <ClInclude Include="clw\Kernel.h" />
     <ClInclude Include="clw\MemoryObject.h" />

@@ -29,9 +29,9 @@ namespace clw
 	{
 		remove_pred(container,
 			[&](decltype(vt) it)
-		{
-			return vt == it;
-		});
+			{
+				return vt == it;
+			});
 	}
 
 	// Removes first item that satisfies given predicate from a generic container
@@ -57,9 +57,9 @@ namespace clw
 	{
 		return remove_first_pred(container,
 			[&](decltype(vt) it)
-		{
-			return vt == it;
-		});
+			{
+				return vt == it;
+			});
 	}
 
 	// Removes and deletes items that satisfy
