@@ -12,3 +12,4 @@
 #include "Image.h"
 #include "NDRange.h"
 #include "Event.h"
+#include "Sampler.h"

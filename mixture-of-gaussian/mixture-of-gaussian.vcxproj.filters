@@ -63,6 +63,9 @@
     <ClCompile Include="clw\Event.cpp">
       <Filter>OpenCL Wrapper</Filter>
     </ClCompile>
+    <ClCompile Include="clw\Sampler.cpp">
+      <Filter>OpenCL Wrapper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -114,6 +117,9 @@
       <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
     <ClInclude Include="clw\Event.h">
+      <Filter>OpenCL Wrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\Sampler.h">
       <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
   </ItemGroup>

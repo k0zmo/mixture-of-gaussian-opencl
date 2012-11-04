@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <unordered_map>
 
 #ifdef _MSC_VER
 // nonstandard extension used: enum used in qualified name
@@ -22,7 +21,6 @@ namespace clw
 {
 	using std::vector;
 	using std::string;
-	using std::unordered_map;
 
 	class Platform;
 	class Device;
@@ -34,10 +32,10 @@ namespace clw
 	class Buffer;
 	class Image2D;
 	class Image3D;
-	//class Sampler
 	class NDRange;
 	class Event;
 	class EventList;
+	class Sampler;
 
 	namespace detail
 	{
