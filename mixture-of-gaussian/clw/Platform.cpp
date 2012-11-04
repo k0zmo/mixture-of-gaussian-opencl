@@ -96,6 +96,12 @@ namespace clw
 		return detail::platformInfo(id, CL_PLATFORM_ICD_SUFFIX_KHR);
 	}
 
+	vector<string> Platform::extensions() const
+	{
+		string exts = detail::platformInfo(id, CL_PLATFORM_EXTENSIONS);
+		return detail::tokenize(exts, ' ');
+	}
+
 	vector<Platform> availablePlatforms()
 	{
 		vector<cl_platform_id> pids = detail::platformIDs();

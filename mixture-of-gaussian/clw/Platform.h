@@ -24,6 +24,7 @@ namespace clw
 		string name() const;
 		string vendor() const;
 		string extensionSuffix() const;
+		vector<string> extensions() const;
 
 		cl_platform_id platformId() const { return id; }
 

@@ -11,6 +11,7 @@
 
 int main(int, char**)
 {
+#if 1
 	if(1)
 	{
 		std::cout << "List of available platforms: \n";
@@ -19,6 +20,13 @@ int main(int, char**)
 		{
 			std::cout << "  * " << platform.name() 
 				<< ", " << platform.versionString() << std::endl;
+			std::cout << "    -> list of supported extensions: \n";
+
+			std::vector<std::string> exts = platform.extensions();
+			clw::for_each(exts, [=](const std::string& ext)
+			{
+				std::cout << "         " << ext << std::endl;
+			});
 		});
 
 		std::cout << "\nList of available devices: \n";
@@ -60,7 +68,7 @@ int main(int, char**)
 	//clw::Program prog = context.buildProgramFromSourceFile("kernel2.cl");
 	//clw::Kernel kernel = prog.createKernel("gaussian");
 
-#if 0
+#else
 	// Open sample video
 	cv::VideoCapture cap("surveillance.webm");
 	if(!cap.isOpened())
