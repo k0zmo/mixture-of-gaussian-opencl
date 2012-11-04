@@ -61,6 +61,14 @@ int main(int, char**)
 	}
 	clw::Device device = context.devices()[0];
 	std:: cout << "Default device: " << device.name() << "\n\n";
+	std::cout << "  -> list of supported 2d image formats: \n";
+	std::vector<clw::ImageFormat> formats = context.supportedImage2DFormats();
+	clw::for_each(formats, [=](const clw::ImageFormat& format)
+	{
+		std::cout 
+			<< "     " << clw::channelOrderName(format.order) << ", " 
+			<< clw::channelTypeName(format.type) << std::endl;
+	});
 
 	//clw::CommandQueue queue = context.createCommandQueue(
 	//	clw::Property_ProfilingEnabled, device);

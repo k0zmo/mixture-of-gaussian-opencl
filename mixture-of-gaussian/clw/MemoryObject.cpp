@@ -34,9 +34,9 @@ namespace clw
 		);
 	}
 
-	EType MemoryObject::type() const
+	EObjectType MemoryObject::type() const
 	{
-		return EType(detail::memObjectInfo<cl_mem_object_type>(id, CL_MEM_TYPE));
+		return EObjectType(detail::memObjectInfo<cl_mem_object_type>(id, CL_MEM_TYPE));
 	}
 
 	cl_mem_flags MemoryObject::flags() const

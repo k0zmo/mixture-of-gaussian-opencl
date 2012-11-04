@@ -104,4 +104,50 @@ namespace clw
 	private:
 		mutable ImageFormat fmt;
 	};
+
+#define CASE(X) case X: return string(#X);
+	inline string channelTypeName(EChannelType type)
+	{
+		switch(type)
+		{
+		CASE(Type_Normalized_Int8);
+		CASE(Type_Normalized_Int16);
+		CASE(Type_Normalized_UInt8);
+		CASE(Type_Normalized_UInt16);
+		CASE(Type_Normalized_565);
+		CASE(Type_Normalized_555);
+		CASE(Type_Normalized_101010);
+		CASE(Type_Unnormalized_Int8);
+		CASE(Type_Unnormalized_Int16);
+		CASE(Type_Unnormalized_Int32);
+		CASE(Type_Unnormalized_Uint8);
+		CASE(Type_Unnormalized_Uint16);
+		CASE(Type_Unnormalized_UInt32);
+		CASE(Type_HalfFloat);
+		CASE(Type_Float);
+		default: return "Undefined";
+		}
+	}
+
+	inline string channelOrderName(EChannelOrder order)
+	{
+		switch(order)
+		{
+		CASE(Order_R);
+		CASE(Order_A);
+		CASE(Order_RG);
+		CASE(Order_RA);
+		CASE(Order_RGB);
+		CASE(Order_RGBA);
+		CASE(Order_BGRA);
+		CASE(Order_ARGB);
+		CASE(Order_Intensity);
+		CASE(Order_Luminance);
+		CASE(Order_Rx);
+		CASE(Order_RGx);
+		CASE(Order_RGBx);
+		default: return "Undefined";
+		}
+	}
+#undef CASE
 }

@@ -2,6 +2,7 @@
 
 #include "Prerequisites.h"
 #include "Device.h"
+#include "Sampler.h"
 
 namespace clw
 {
@@ -20,6 +21,13 @@ namespace clw
 
 		CommandQueue createCommandQueue(cl_command_queue_properties properties,
 		                                const Device& device);
+
+		Sampler createSampler(bool normalizedCoords, 
+		                      EAddressingMode addressingMode, 
+		                      EFilterMode filterMode);
+
+		vector<ImageFormat> supportedImage2DFormats() const;
+		vector<ImageFormat> supportedImage3DFormats() const;
 
 		size_t numDevices() const { return devs.size(); }
 		const vector<Device>& devices() const { return devs; }

@@ -11,15 +11,15 @@ namespace clw
 		Access_ReadOnly     = (1 << 2)                        
 	};
 
-	enum EType
+	enum EObjectType
 	{
-		Type_Buffer         = 0x10F0,
-		Type_Image2D        = 0x10F1,
-		Type_Image3D        = 0x10F2,
-		Type_Image2DArray   = 0x10F3,
-		Type_Image1D        = 0x10F4,
-		Type_Image1DArray   = 0x10F5,
-		Type_Image1DBuffer  = 0x10F6
+		Object_Buffer         = 0x10F0,
+		Object_Image2D        = 0x10F1,
+		Object_Image3D        = 0x10F2,
+		Object_Image2DArray   = 0x10F3,
+		Object_Image1D        = 0x10F4,
+		Object_Image1DArray   = 0x10F5,
+		Object_Image1DBuffer  = 0x10F6
 	};
 
 	class MemoryObject
@@ -30,7 +30,7 @@ namespace clw
 		Context* context() const { return ctx; }
 
 		EAccess access() const;
-		EType type() const;
+		EObjectType type() const;
 		cl_mem_flags flags() const;
 		void* hostPointer() const;
 		size_t size() const;

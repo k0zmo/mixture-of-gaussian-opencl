@@ -30,6 +30,7 @@ namespace clw
 	class Kernel;
 	class MemoryObject;
 	class Buffer;
+	struct ImageFormat;
 	class Image2D;
 	class Image3D;
 	class NDRange;

@@ -2,6 +2,7 @@
 #include "Platform.h"
 #include "CommandQueue.h"
 #include "Program.h"
+#include "Image.h"
 
 #include <iostream>
 
@@ -101,6 +102,33 @@ namespace clw
 			if(eid != CL_SUCCESS)
 				std::cerr << name << errorName(eid) << std::endl;;
 		}
+
+		vector<ImageFormat> supportedImageFormats(
+			cl_context id,
+			cl_mem_object_type image_type)
+		{
+			cl_uint num;
+			cl_int error;
+			if((error = clGetSupportedImageFormats(id, CL_MEM_READ_WRITE,
+			        image_type, 0, nullptr, &num)) != CL_SUCCESS || !num)
+			{
+				reportError("supportedImageFormats() ", error);
+				return vector<ImageFormat>();
+			}
+			vector<cl_image_format> buf(num);
+			if((error = clGetSupportedImageFormats(id, CL_MEM_READ_WRITE,
+			        image_type, num, buf.data(), nullptr)) != CL_SUCCESS)
+			{
+				reportError("supportedImageFormats() ", error);
+				return vector<ImageFormat>();
+			}
+			vector<ImageFormat> imageFormats(num);
+			for(cl_uint i = 0; i < num; ++i)
+				imageFormats[i] = ImageFormat(
+					EChannelOrder(buf[i].image_channel_order), 
+					EChannelType(buf[i].image_channel_data_type));
+			return imageFormats;
+		}
 	}
 
 	Context::Context() 
@@ -188,11 +216,36 @@ namespace clw
 	}
 
 	CommandQueue Context::createCommandQueue(cl_command_queue_properties properties,
-	                                              const Device& device)
+	                                         const Device& device)
 	{
-		cl_command_queue cid = clCreateCommandQueue(id, device.deviceId(), properties, &eid);
+		cl_command_queue cid = clCreateCommandQueue
+			(id, device.deviceId(),
+			properties, &eid);
 		detail::reportError("Context::createCommandQueue(): ", eid);
 		return cid ? CommandQueue(this, cid) : CommandQueue();
+	}
+
+	Sampler Context::createSampler(bool normalizedCoords, 
+		                           EAddressingMode addressingMode, 
+		                           EFilterMode filterMode)
+	{
+		cl_int error;
+		cl_sampler sampler = clCreateSampler
+			(id, normalizedCoords ? CL_TRUE : CL_FALSE, 
+			cl_addressing_mode(addressingMode), 
+			cl_filter_mode(filterMode), &error);
+		detail::reportError("Context::createSampler() ", error);
+		return sampler ? Sampler(this, sampler) : Sampler();
+	}
+
+	vector<ImageFormat> Context::supportedImage2DFormats() const
+	{
+		return detail::supportedImageFormats(id, CL_MEM_OBJECT_IMAGE2D);
+	}
+
+	vector<ImageFormat> Context::supportedImage3DFormats() const
+	{
+		return detail::supportedImageFormats(id, CL_MEM_OBJECT_IMAGE3D);
 	}
 
 	Program Context::createProgramFromSourceCode(const string& sourceCode)
