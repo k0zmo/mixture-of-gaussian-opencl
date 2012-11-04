@@ -1,4 +1,6 @@
 #include "CommandQueue.h"
+#include "MemoryObject.h"
+#include "Event.h"
 
 namespace clw
 {
@@ -63,5 +65,41 @@ namespace clw
 	{
 		cl_int err = clFlush(id);
 		detail::reportError("CommandQueue::flush(): ", err);
+	}
+
+	bool CommandQueue::unmap(MemoryObject& obj, void* ptr)
+	{
+		cl_event event;
+		cl_int error;
+		if((error = clEnqueueUnmapMemObject(id, obj.memoryId(),
+		        ptr, 0, 0, &event)) != CL_SUCCESS)
+		{
+			detail::reportError("CommandQueue()::unmap() ", error);
+			return false;
+		}
+		else
+		{
+			clWaitForEvents(1, &event);
+			clReleaseEvent(event);
+			return true;
+		}
+	}
+
+	Event CommandQueue::asyncUnmap(MemoryObject& obj,
+	                               void* ptr,
+	                               const EventList& after)
+	{
+		cl_event event;
+		cl_int error;
+		if((error = clEnqueueUnmapMemObject(id, obj.memoryId(),
+			ptr, after.size(), after, &event)) != CL_SUCCESS)
+		{
+			detail::reportError("CommandQueue()::unmap() ", error);
+			return Event();
+		}
+		else
+		{
+			Event(event);
+		}
 	}
 }
