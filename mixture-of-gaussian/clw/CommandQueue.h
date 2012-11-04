@@ -2,6 +2,7 @@
 
 #include "Prerequisites.h"
 #include "Event.h"
+#include "MemoryObject.h"
 
 namespace clw
 {
@@ -29,50 +30,73 @@ namespace clw
 		void finish();
 		void flush();
 
-		bool readBuffer();
-		Event asyncReadBuffer();
+		bool readBuffer(const Buffer& buffer,
+			            size_t offset, 
+			            void* data, 
+			            size_t size);
+		Event asyncReadBuffer(const Buffer& buffer,
+		                      size_t offset, 
+		                      void* data, 
+		                      size_t size,
+		                      const EventList& after = EventList());
 
-		bool writeBuffer();
-		Event asyncWriteBuffer();
+		bool writeBuffer(Buffer& buffer,
+		                 size_t offset, 
+		                 const void* data, 
+		                 size_t size);
+		Event asyncWriteBuffer(Buffer& buffer,
+		                       size_t offset, 
+		                       const void* data, 
+		                       size_t size,
+		                       const EventList& after = EventList());
 
-		bool copyBuffer();
-		Event asyncCopyBuffer();
+		//bool copyBuffer();
+		//Event asyncCopyBuffer();
 
-		bool readBufferRect();
-		Event asyncReadBufferRect();
+		//bool readBufferRect();
+		//Event asyncReadBufferRect();
 
-		bool writeBufferRect();
-		Event asyncWriteBufferRect();
+		//bool writeBufferRect();
+		//Event asyncWriteBufferRect();
 
-		bool copyBufferRect();
-		Event asyncCopyBufferRect();
+		//bool copyBufferRect();
+		//Event asyncCopyBufferRect();
 
 		// !TODO OpenCL 1.2
 		// clEnqueueFillBuffer
 
-		bool readImage();
-		Event asyncReadImage();
+		//bool readImage();
+		//Event asyncReadImage();
 
-		bool writeImage();
-		Event asyncWriteImage();
+		//bool writeImage();
+		//Event asyncWriteImage();
 
-		bool copyImage();
-		Event asyncCopyImage();
+		//bool copyImage();
+		//Event asyncCopyImage();
 
 		// !TODO OpenCL 1.2
 		// clEnqueueFillImage
 
-		bool copyImageToBuffer();
-		Event asyncCopyImageToBuffer();
+		//bool copyImageToBuffer();
+		//Event asyncCopyImageToBuffer();
 
-		bool copyBufferToImage();
-		Event asyncCopyBufferToImage();
+		//bool copyBufferToImage();
+		//Event asyncCopyBufferToImage();
 
-		void* mapBuffer();
-		Event asyncMapBuffer();
+		void* mapBuffer(Buffer& buffer, 
+		                size_t offset, 
+		                size_t size,
+		                EAccess access);
+		void* mapBuffer(Buffer& buffer, EAccess access);
+		Event asyncMapBuffer(Buffer& buffer, 
+		                     void** data,
+		                     size_t offset, 
+		                     size_t size, 
+		                     EAccess access, 
+		                     const EventList& after = EventList());
 
-		void* mapImage();
-		Event asyncMapImage();
+		//void* mapImage();
+		//Event asyncMapImage();
 
 		bool unmap(MemoryObject& obj,
 			       void* ptr);
@@ -80,9 +104,16 @@ namespace clw
 			             void* ptr,
 			             const EventList& after = EventList());
 
-		Event asyncRunKernel();
-		Event asyncRunTask();
-		Event asyncRunNativeKernel();
+		bool runKernel(const Kernel& kernel);
+		Event asyncRunKernel(
+			const Kernel& kernel,
+			const EventList& after);
+
+		//bool runTask();
+		//Event asyncRunTask();
+
+		//bool runNativeKernel();
+		//Event asyncRunNativeKernel();
 
 		// !TODO OpenCL 1.2
 		// clEnqueueMigrateMemObjects
