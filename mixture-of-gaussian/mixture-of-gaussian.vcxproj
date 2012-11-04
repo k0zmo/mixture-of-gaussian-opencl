@@ -85,6 +85,7 @@
     <ClCompile Include="clw\Buffer.cpp" />
     <ClCompile Include="clw\CommandQueue.cpp" />
     <ClCompile Include="clw\Context.cpp" />
+    <ClCompile Include="clw\details.cpp" />
     <ClCompile Include="clw\Device.cpp" />
     <ClCompile Include="clw\Image.cpp" />
     <ClCompile Include="clw\Kernel.cpp" />

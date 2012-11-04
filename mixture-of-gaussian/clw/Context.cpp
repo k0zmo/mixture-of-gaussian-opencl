@@ -4,7 +4,6 @@
 #include "Program.h"
 
 #include <iostream>
-#include <fstream>
 
 namespace clw
 {
@@ -101,24 +100,6 @@ namespace clw
 		{
 			if(eid != CL_SUCCESS)
 				std::cerr << name << errorName(eid) << std::endl;;
-		}
-
-		bool readAsString(const string& filename, string* contents)
-		{
-			std::ifstream strm;
-			strm.open(filename.c_str(), std::ios::binary | std::ios_base::in);
-			if(!strm.is_open())
-			{
-				std::cerr << "Unable to open file " << filename << std::endl;
-				return false;
-			}
-			strm.seekg(0, std::ios::end);
-			contents->reserve(static_cast<size_t>(strm.tellg()));
-			strm.seekg(0);
-
-			contents->assign(std::istreambuf_iterator<char>(strm),
-				std::istreambuf_iterator<char>());
-			return true;
 		}
 	}
 

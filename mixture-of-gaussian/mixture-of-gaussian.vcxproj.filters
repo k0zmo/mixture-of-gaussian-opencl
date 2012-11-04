@@ -54,6 +54,9 @@
     <ClCompile Include="clw\Image.cpp">
       <Filter>OpenCL Wrangler</Filter>
     </ClCompile>
+    <ClCompile Include="clw\details.cpp">
+      <Filter>OpenCL Wrangler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">

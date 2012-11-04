@@ -36,6 +36,8 @@ namespace clw
 		bool supportsHalf() const;
 
 		cl_device_id deviceId() const { return id; }
+
+		//! TODO: Device fission (OpenCL 1.2 or 1.1 with extensions)
 	private:
 		cl_device_id id;
 	};
