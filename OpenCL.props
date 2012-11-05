@@ -10,6 +10,7 @@
     </Link>
     <ClCompile>
       <AdditionalIncludeDirectories>$(AMDAPPSDKROOT)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CL_USE_DEPRECATED_OPENCL_1_1_APIS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

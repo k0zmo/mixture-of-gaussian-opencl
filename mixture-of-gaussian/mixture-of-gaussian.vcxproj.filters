@@ -123,4 +123,9 @@
       <Filter>OpenCL Wrapper</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="kernels.cl">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
