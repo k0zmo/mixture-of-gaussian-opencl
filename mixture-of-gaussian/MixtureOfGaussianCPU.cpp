@@ -43,7 +43,7 @@ void MixtureOfGaussianCPU::reinitialize(float backgroundRatio)
 	bgmodel = cv::Scalar::all(0);
 }
 
-void MixtureOfGaussianCPU::calc_pix_impl(const uchar* src, uchar* dst, 
+void MixtureOfGaussianCPU::calc_pix_impl(uchar src, uchar* dst, 
 	MixtureData mptr[], float alpha)
 {
 	const float w0 = initialWeight; // 0.05 lub 0.001
@@ -54,7 +54,7 @@ void MixtureOfGaussianCPU::calc_pix_impl(const uchar* src, uchar* dst,
 	int k, k1, K = nmixtures;
 	float vT = varThreshold, T = backgroundRatio;
 	float wsum = 0;
-	float pix = *src;
+	float pix = src;
 	int kHit = -1, kForeground = -1;
 
 	for( k = 0; k < K; k++ )
@@ -113,7 +113,7 @@ void MixtureOfGaussianCPU::calc_pix_impl(const uchar* src, uchar* dst,
 
 	*dst = (uchar)(-(kHit >= kForeground));
 #else
-	float pix = static_cast<float>(*src);
+	float pix = static_cast<float>(src);
 	int pdfMatched = -1;
 
 	for(int mix = 0; mix < nmixtures; ++mix)
@@ -252,7 +252,7 @@ void MixtureOfGaussianCPU::calc_impl(uchar* frame, uchar* mask,
 
 		for(int x = 0; x < cols; ++x, mptr += nmixtures)
 		{
-			calc_pix_impl(&src[x], &dst[x], mptr, alpha);
+			calc_pix_impl(src[x], &dst[x], mptr, alpha);
 		}
 	}
 #else
@@ -268,7 +268,7 @@ void MixtureOfGaussianCPU::calc_impl(uchar* frame, uchar* mask,
 
 				for(int x = 0; x < cols; ++x, mptr_local += nmixtures)
 				{
-					calc_pix_impl(&src[x], &dst[x], mptr_local, alpha);
+					calc_pix_impl(src[x], &dst[x], mptr_local, alpha);
 				}
 			}
 		});

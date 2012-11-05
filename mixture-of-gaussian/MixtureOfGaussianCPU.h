@@ -3,7 +3,7 @@
 #include <opencv2/core/core.hpp>
 
 static const int defaultNumMixtures = 5;
-static const float defaultHistory = 200;
+static const int defaultHistory = 200;
 static const float defaultBackgroundRatio = 0.7f;
 static const float defaultVarianceThreshold = 2.5f * 2.5f;
 static const float defaultNoiseSigma = 30.0f * 0.5f;
@@ -39,7 +39,7 @@ public:
 	void reinitialize(float backgroundRatio);
 
 private:
-	void calc_pix_impl(const uchar* src, uchar* dst,
+	void calc_pix_impl(uchar src, uchar* dst,
 		MixtureData mptr[], float alpha);
 	void calc_impl(uchar* frame, uchar* mask,
 		MixtureData* mptr, float alpha);

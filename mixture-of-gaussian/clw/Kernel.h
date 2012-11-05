@@ -2,6 +2,7 @@
 
 #include "Prerequisites.h"
 #include "NDRange.h"
+#include "MemoryObject.h"
 
 namespace clw
 {
@@ -59,8 +60,9 @@ namespace clw
 		void setGlobalWorkOffset(size_t width, size_t height);
 		void setGlobalWorkOffset(size_t width, size_t height, size_t depth);
 
-		template<typename Value>
-		void setArg(unsigned index, Value value);
+		void setArg(unsigned index, cl_int value);
+		void setArg(unsigned index, cl_float value);
+		void setArg(unsigned index, const MemoryObject& memObj);
 		void setArg(unsigned index, const void* data, size_t size);
 
 	private:
@@ -72,15 +74,25 @@ namespace clw
 		NDRange lclWorkSize;
 	};
 
-	template<typename Value>
-	inline void Kernel::setArg(unsigned index, Value value)
+	inline void Kernel::setArg(unsigned index, cl_int value)
 	{
-		setArg(index, &value, sizeof(Value));
+		clSetKernelArg(id, index, sizeof(cl_int), &value);
+	}
+
+	inline void Kernel::setArg(unsigned index, cl_float value)
+	{
+		clSetKernelArg(id, index, sizeof(cl_float), &value);
 	}
 
 	inline void Kernel::setArg(unsigned index, const void* data, size_t size)
 	{
 		clSetKernelArg(id, index, size, data);
+	}
+
+	inline void Kernel::setArg(unsigned index, const MemoryObject& memObj)
+	{
+		cl_mem mem = memObj.memoryId();
+		clSetKernelArg(id, index, sizeof(cl_mem), &mem);
 	}
 
 	inline NDRange Kernel::globalWorkSize() const
@@ -140,17 +152,17 @@ namespace clw
 
 	inline void Kernel::setLocalWorkSize(size_t width)
 	{
-		setLocalWorkSize(width);
+		setLocalWorkSize(NDRange(width));
 	}
 
 	inline void Kernel::setLocalWorkSize(size_t width, size_t height)
 	{
-		setLocalWorkSize(width, height);
+		setLocalWorkSize(NDRange(width, height));
 	}
 
 	inline void Kernel::setLocalWorkSize(size_t width, size_t height, size_t depth)
 	{
-		setLocalWorkSize(width, height, depth);
+		setLocalWorkSize(NDRange(width, height, depth));
 	}
 
 	inline NDRange Kernel::globalWorkOffset() const

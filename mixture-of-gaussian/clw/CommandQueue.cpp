@@ -226,7 +226,7 @@ namespace clw
 			0, nullptr, &event);
 		if(error != CL_SUCCESS)
 		{
-			detail::reportError("CommandQueue::asyncRunKernel() ", error);
+			detail::reportError("CommandQueue::runKernel() ", error);
 			return false;
 		}
 		else

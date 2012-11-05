@@ -13,7 +13,7 @@ namespace clw
 		NDRange(size_t width, size_t height, size_t depth);
 
 		cl_uint dimensions() const { return dims; }
-		size_t width() const { return sizes[1]; }
+		size_t width() const { return sizes[0]; }
 		size_t height() const { return sizes[1]; }
 		size_t depth() const { return sizes[2]; }
 
