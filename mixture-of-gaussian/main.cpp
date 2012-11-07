@@ -86,7 +86,7 @@ std::vector<clw::Device> getSingleDevice()
 int main(int, char**)
 {
 	// Open sample video
-	cv::VideoCapture cap("surveillance.webm");
+	cv::VideoCapture cap("video-cfr23.mp4");
 	if(!cap.isOpened())
 	{
 		exit(-1);
