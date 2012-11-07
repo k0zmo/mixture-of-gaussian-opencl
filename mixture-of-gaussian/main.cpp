@@ -96,6 +96,12 @@ int main(int, char**)
 	const int cols    = int(cap.get(CV_CAP_PROP_FRAME_WIDTH));
 	const int rows    = int(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
 	const int format  = int(cap.get(CV_CAP_PROP_FORMAT));
+	const int channels = 3;
+	cl_int2 frameSize = { cols, rows };
+
+	static const int nmixtures = 5;
+	std::string buildOptions = "-Dmixtures=";
+	buildOptions += nmixtures + '0';
 
 	assert(format == CV_8U);
 
@@ -120,25 +126,24 @@ int main(int, char**)
 	clw::CommandQueue queue = context.createCommandQueue(clw::Property_ProfilingEnabled, device);
 
 	clw::Program prog = context.createProgramFromSourceFile("kernels.cl");
-	if(!prog.build())
+	if(!prog.build(buildOptions))
 	{
 		std::cout << prog.log();
 		std::exit(-1);
 	}
-	clw::Kernel kernelRgbaToGray = prog.createKernel("rgba2gray");
+	std::cout << prog.log();
+	clw::Kernel kernelRgbaToGray = prog.createKernel("rgb2gray_image");
 	clw::Kernel kernelMoG = prog.createKernel("mog");
 
-	// Obraz wejsciowy kolorwy - BGRA
+	// Obraz wejsciowy kolorowy - BGR (jako bufor)
 	cl_int error;
-	cl_image_format image_format;
-	image_format.image_channel_order = CL_BGRA;
-	image_format.image_channel_data_type = CL_UNORM_INT8;
-	cl_mem cl_inputFrame = clCreateImage2D(context.contextId(), 
-		CL_MEM_READ_ONLY, &image_format, cols, rows, 0, nullptr, &error);
+	cl_mem cl_inputFrame = clCreateBuffer(context.contextId(),
+		CL_MEM_READ_ONLY, rows * cols * channels * sizeof(cl_uchar), nullptr, &error);
 	assert(error == CL_SUCCESS);
-	clw::Image2D inputFrame(&context, cl_inputFrame);
+	clw::Buffer inputFrame(&context, cl_inputFrame);
 
 	// Obraz w skali szarosci
+	cl_image_format image_format;
 	image_format.image_channel_order = CL_R;
 	image_format.image_channel_data_type = CL_UNORM_INT8;
 	cl_mem cl_grayFrame = clCreateImage2D(context.contextId(), 
@@ -155,12 +160,12 @@ int main(int, char**)
 	clw::Image2D dstFrame(&context, cl_dstFrame);
 
 	// Dane mikstur
-	static const int nmixtures = 5;
 	const int cl_mixturesSize = nmixtures * rows * cols * sizeof(MixtureData);
 	cl_mem cl_mixtures = clCreateBuffer(context.contextId(),
 		CL_MEM_READ_WRITE, cl_mixturesSize, nullptr, &error);
 	assert(error == CL_SUCCESS);
 	clw::Buffer mixtureData(&context, cl_mixtures);
+
 	// Wyzerowane
 	void* ptr = queue.mapBuffer(mixtureData, clw::Access_WriteOnly);
 	memset(ptr, 0, cl_mixturesSize);
@@ -169,7 +174,6 @@ int main(int, char**)
 	// Parametry stale dla kernela
 	struct MogParams
 	{
-		int nmixtures;
 		float varThreshold;
 		float backgroundRatio;
 		float w0; // waga dla nowej mikstury
@@ -177,7 +181,6 @@ int main(int, char**)
 		float minVar; // dolny prog mozliwej wariancji
 	};
 	MogParams mogParams;
-	mogParams.nmixtures = nmixtures;
 	mogParams.varThreshold = defaultVarianceThreshold;
 	mogParams.backgroundRatio = defaultBackgroundRatio;
 	mogParams.w0 = defaultInitialWeight;
@@ -195,6 +198,7 @@ int main(int, char**)
 	kernelRgbaToGray.setRoundedGlobalWorkSize(cols, rows);
 	kernelRgbaToGray.setArg(0, inputFrame);
 	kernelRgbaToGray.setArg(1, grayFrame);
+	kernelRgbaToGray.setArg(2, frameSize);
 
 	kernelMoG.setLocalWorkSize(16 ,16);
 	kernelMoG.setRoundedGlobalWorkSize(cols, rows);
@@ -205,7 +209,6 @@ int main(int, char**)
 	kernelMoG.setArg(4, 0.0f);
 
 	int nframe = 0;
-	QPCTimer timer;
 
 	for(;;)
 	{
@@ -215,15 +218,11 @@ int main(int, char**)
 		if(frame.rows == 0 || frame.cols == 0)
 			break;
 
-		cv::cvtColor(frame, frame, CV_BGR2BGRA);
-
-		size_t origin[3] = {0, 0, 0};
-		size_t region[3] = {cols, rows, 1};
-		error = clEnqueueWriteImage(queue.commandQueueId(), cl_inputFrame, CL_TRUE,
-			origin, region, 0, 0, frame.data, 0, nullptr, nullptr);
-		assert(error == CL_SUCCESS);
-
-		double start = timer.currentTime();
+		cl_event cl_evt_write;
+		error = clEnqueueWriteBuffer(queue.commandQueueId(), cl_inputFrame, CL_FALSE,
+			0, rows * cols * 3 * sizeof(cl_uchar), frame.data, 0, nullptr, &cl_evt_write);
+		assert(error == CL_SUCCESS);		
+		clw::Event e0(cl_evt_write);
 
 		++nframe;
 		float learningRate = -1.0f;
@@ -232,20 +231,38 @@ int main(int, char**)
 			: 1.0f/std::min(nframe, defaultHistory);
 		kernelMoG.setArg(4, alpha);
 
-		queue.runKernel(kernelRgbaToGray);
-		queue.runKernel(kernelMoG);
+		clw::Event e1 = queue.asyncRunKernel(kernelRgbaToGray);
+		clw::Event e2 = queue.asyncRunKernel(kernelMoG);
 
-		double stop = timer.currentTime();
-		std::cout << 1.0 / (stop - start) << std::endl;		
-
-		error = clEnqueueReadImage(queue.commandQueueId(), cl_dstFrame, CL_TRUE,
-			origin, region, 0, 0, dst.data, 0, nullptr, nullptr);
+		cl_event cl_evt_readImageDst;
+		size_t origin[3] = {0, 0, 0};
+		size_t region[3] = {cols, rows, 1};
+		error = clEnqueueReadImage(queue.commandQueueId(), cl_dstFrame, CL_FALSE,
+			origin, region, 0, 0, dst.data, 0, nullptr, &cl_evt_readImageDst);
 		assert(error == CL_SUCCESS);
+		clw::Event e3(cl_evt_readImageDst);
+		
+		cl_event cl_evt_readImageGray;
+		error = clEnqueueReadImage(queue.commandQueueId(), cl_grayFrame, CL_FALSE,
+			origin, region, 0, 0, gray.data, 0, nullptr, &cl_evt_readImageGray);
+		assert(error == CL_SUCCESS);
+		clw::Event e4(cl_evt_readImageGray);
+
+		e4.waitForFinished();
+
+		double writeDuration = (e0.finishTime() - e0.startTime()) * 0.000001;
+		double colorDuration = (e1.finishTime() - e1.startTime()) * 0.000001;
+		double mogDuration = (e2.finishTime() - e2.startTime()) * 0.000001;		
+		double readDstDuration = (e3.finishTime() - e3.startTime()) * 0.000001;
+		double readGrayDuration = (e4.finishTime() - e4.startTime()) * 0.000001;
+		std::cout 
+			<< "MoG: " << mogDuration << " [ms]" <<
+			", color: " << colorDuration << " [ms]" <<
+			", writeSrc: " << writeDuration << " [ms]" <<
+			", readDst: " << readDstDuration << " [ms]" <<
+			", readGray: " << readGrayDuration << " [ms]\n";
+
 		cv::imshow("Result", dst);
-
-		error = clEnqueueReadImage(queue.commandQueueId(), cl_grayFrame, CL_TRUE,
-			origin, region, 0, 0, gray.data, 0, nullptr, nullptr);
-		assert(error == CL_SUCCESS);
 		cv::imshow("Gray", gray);
 
 		int key = cv::waitKey(30);
