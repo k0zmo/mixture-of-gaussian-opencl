@@ -10,21 +10,13 @@ solution "mixture-of-gaussian"
     	language "C++"
 	    location "proj"
     	kind "ConsoleApp"
-    	-- includedirs "include"
-    	
-	    configuration "Debug"
-    		targetdir "../Debug"
-    	configuration "Release"
-    		targetdir "../Release"
-    	configuration {}
-		
-		configuration { "linux", "gmake" }
-			buildoptions { "-std=c++0x", "-fPIC" }
-	
+    	includedirs "clw"
+		defines "CL_USE_DEPRECATED_OPENCL_1_1_APIS"	
     	objdir "obj"
+		targetdir "."
     	
     	files {
-    		"clw/*.cpp", "clw/*.h",
+    		"clw/clw/*.cpp", "clw/clw/*.h",
     		"main.cpp", "MixtureOfGaussianCPU.*", "QPCTimer.*",
     	}
 			
@@ -32,3 +24,15 @@ solution "mixture-of-gaussian"
 			"opencv_core", "opencv_imgproc", "opencv_highgui",
 			"OpenCL"
 		}
+
+	configuration "Debug"
+		targetsuffix "_d"
+		defines { "DEBUG", "_DEBUG", }
+		flags "Symbols"
+	
+	configuration "Release"
+		defines "NDEBUG"	
+		flags { "OptimizeSpeed", "NoEditAndContinue", "NoFramePointer" }
+		
+	configuration { "linux", "gmake" }
+		buildoptions { "-std=c++0x", "-fPIC" }
