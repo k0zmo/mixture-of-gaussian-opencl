@@ -55,6 +55,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <ForcedIncludeFiles>Precompiled.h</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>clw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -72,6 +73,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
       <ForcedIncludeFiles>Precompiled.h</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>clw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -82,19 +84,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="clw\Buffer.cpp" />
-    <ClCompile Include="clw\CommandQueue.cpp" />
-    <ClCompile Include="clw\Context.cpp" />
-    <ClCompile Include="clw\details.cpp" />
-    <ClCompile Include="clw\Device.cpp" />
-    <ClCompile Include="clw\Event.cpp" />
-    <ClCompile Include="clw\Image.cpp" />
-    <ClCompile Include="clw\Kernel.cpp" />
-    <ClCompile Include="clw\MemoryObject.cpp" />
-    <ClCompile Include="clw\NDRange.cpp" />
-    <ClCompile Include="clw\Platform.cpp" />
-    <ClCompile Include="clw\Program.cpp" />
-    <ClCompile Include="clw\Sampler.cpp" />
+    <ClCompile Include="clw\clw\Buffer.cpp" />
+    <ClCompile Include="clw\clw\CommandQueue.cpp" />
+    <ClCompile Include="clw\clw\Context.cpp" />
+    <ClCompile Include="clw\clw\details.cpp" />
+    <ClCompile Include="clw\clw\Device.cpp" />
+    <ClCompile Include="clw\clw\Event.cpp" />
+    <ClCompile Include="clw\clw\Image.cpp" />
+    <ClCompile Include="clw\clw\Kernel.cpp" />
+    <ClCompile Include="clw\clw\MemoryObject.cpp" />
+    <ClCompile Include="clw\clw\NDRange.cpp" />
+    <ClCompile Include="clw\clw\Platform.cpp" />
+    <ClCompile Include="clw\clw\Program.cpp" />
+    <ClCompile Include="clw\clw\Sampler.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MixtureOfGaussianCPU.cpp" />
     <ClCompile Include="Precompiled.cpp">
@@ -108,21 +110,21 @@
     <ClCompile Include="QPCTimer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="clw\Buffer.h" />
-    <ClInclude Include="clw\clw.h" />
-    <ClInclude Include="clw\CommandQueue.h" />
-    <ClInclude Include="clw\Context.h" />
-    <ClInclude Include="clw\Device.h" />
-    <ClInclude Include="clw\Event.h" />
-    <ClInclude Include="clw\Image.h" />
-    <ClInclude Include="clw\Kernel.h" />
-    <ClInclude Include="clw\MemoryObject.h" />
-    <ClInclude Include="clw\NDRange.h" />
-    <ClInclude Include="clw\Platform.h" />
-    <ClInclude Include="clw\Prerequisites.h" />
-    <ClInclude Include="clw\Program.h" />
-    <ClInclude Include="clw\Sampler.h" />
-    <ClInclude Include="clw\StlUtils.h" />
+    <ClInclude Include="clw\clw\Buffer.h" />
+    <ClInclude Include="clw\clw\clw.h" />
+    <ClInclude Include="clw\clw\CommandQueue.h" />
+    <ClInclude Include="clw\clw\Context.h" />
+    <ClInclude Include="clw\clw\Device.h" />
+    <ClInclude Include="clw\clw\Event.h" />
+    <ClInclude Include="clw\clw\Image.h" />
+    <ClInclude Include="clw\clw\Kernel.h" />
+    <ClInclude Include="clw\clw\MemoryObject.h" />
+    <ClInclude Include="clw\clw\NDRange.h" />
+    <ClInclude Include="clw\clw\Platform.h" />
+    <ClInclude Include="clw\clw\Prerequisites.h" />
+    <ClInclude Include="clw\clw\Program.h" />
+    <ClInclude Include="clw\clw\Sampler.h" />
+    <ClInclude Include="clw\clw\StlUtils.h" />
     <ClInclude Include="MixtureOfGaussianCPU.h" />
     <ClInclude Include="Precompiled.h" />
     <ClInclude Include="QPCTimer.h" />

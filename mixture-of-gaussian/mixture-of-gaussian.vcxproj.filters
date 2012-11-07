@@ -9,9 +9,8 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="OpenCL Wrapper">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="clw">
+      <UniqueIdentifier>{c4ce6b23-2332-4465-a91d-de586d497410}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -27,44 +26,44 @@
     <ClCompile Include="MixtureOfGaussianCPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="clw\Platform.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\Buffer.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\Device.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\CommandQueue.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\Context.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\Context.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\CommandQueue.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\details.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\Program.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\Device.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\Kernel.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\Event.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\MemoryObject.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\Image.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\Buffer.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\Kernel.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\Image.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\MemoryObject.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\details.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\NDRange.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\NDRange.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\Platform.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\Event.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\Program.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\Sampler.cpp">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClCompile Include="clw\clw\Sampler.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -77,50 +76,50 @@
     <ClInclude Include="MixtureOfGaussianCPU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="clw\Platform.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\Buffer.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\Prerequisites.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\clw.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\Device.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\CommandQueue.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\StlUtils.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\Context.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\Context.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\Device.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\CommandQueue.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\Event.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\Program.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\Image.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\Kernel.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\Kernel.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\clw.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\MemoryObject.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\MemoryObject.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\NDRange.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\Buffer.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\Platform.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\Image.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\Prerequisites.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\NDRange.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\Program.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\Event.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\Sampler.h">
+      <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\Sampler.h">
-      <Filter>OpenCL Wrapper</Filter>
+    <ClInclude Include="clw\clw\StlUtils.h">
+      <Filter>clw</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
