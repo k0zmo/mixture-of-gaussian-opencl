@@ -76,7 +76,6 @@ __kernel void mog(
 {
 	const int2 gid = { get_global_id(0), get_global_id(1) };
 	const int2 size = { get_image_width(frame), get_image_height(frame) };
-	const int gid1 = gid.x + gid.y * size.x;
 	
 	if (!all(gid < size))
 		return;
@@ -85,6 +84,8 @@ __kernel void mog(
 	
 	bool pdfMatched = -1;	
 	//const int nmixtures = params->nmixtures;
+	
+	const int gid1 = gid.x + gid.y * size.x;
 	#define MIXTURE(mx) mptr[gid1 * nmixtures + mx]
 	
 	#pragma unroll nmixtures

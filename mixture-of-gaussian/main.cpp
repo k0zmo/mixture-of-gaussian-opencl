@@ -117,13 +117,15 @@ int main(int, char**)
 	// Initialize OpenCL
 	clw::Context context;
 	if(!context.create(getSingleDevice()))
+	//if(!context.create(clw::Gpu))
 	{
 		std::cerr << "Couldn't create context, quitting\n";
 		std::exit(-1);
 	}
 
 	clw::Device device = context.devices()[0];
-	clw::CommandQueue queue = context.createCommandQueue(clw::Property_ProfilingEnabled, device);
+	clw::CommandQueue queue = context.createCommandQueue
+		(clw::Property_ProfilingEnabled, device);
 
 	clw::Program prog = context.createProgramFromSourceFile("kernels.cl");
 	if(!prog.build(buildOptions))
@@ -136,39 +138,30 @@ int main(int, char**)
 	clw::Kernel kernelMoG = prog.createKernel("mog");
 
 	// Obraz wejsciowy kolorowy - BGR (jako bufor)
-	cl_int error;
-	cl_mem cl_inputFrame = clCreateBuffer(context.contextId(),
-		CL_MEM_READ_ONLY, rows * cols * channels * sizeof(cl_uchar), nullptr, &error);
-	assert(error == CL_SUCCESS);
-	clw::Buffer inputFrame(&context, cl_inputFrame);
+	int inputFrameSize = rows * cols * channels * sizeof(cl_uchar);
+	clw::Buffer inputFrame = context.createBuffer
+		(clw::Access_ReadOnly, clw::Location_Device, inputFrameSize);
 
 	// Obraz w skali szarosci
-	cl_image_format image_format;
-	image_format.image_channel_order = CL_R;
-	image_format.image_channel_data_type = CL_UNORM_INT8;
-	cl_mem cl_grayFrame = clCreateImage2D(context.contextId(), 
-		CL_MEM_READ_WRITE, &image_format, cols, rows, 0, nullptr, &error);
-	assert(error == CL_SUCCESS);
-	clw::Image2D grayFrame(&context, cl_grayFrame);
+	clw::Image2D grayFrame = context.createImage2D
+		(clw::Access_ReadWrite, clw::Location_Device,
+		 clw::ImageFormat(clw::Order_R, clw::Type_Normalized_UInt8),
+		 cols, rows);
 
 	// Obraz (w zasadzie maska) pierwszego planu
-	image_format.image_channel_order = CL_R;
-	image_format.image_channel_data_type = CL_UNORM_INT8;
-	cl_mem cl_dstFrame = clCreateImage2D(context.contextId(), 
-		CL_MEM_WRITE_ONLY, &image_format, cols, rows, 0, nullptr, &error);
-	assert(error == CL_SUCCESS);
-	clw::Image2D dstFrame(&context, cl_dstFrame);
+	clw::Image2D dstFrame = context.createImage2D
+		(clw::Access_WriteOnly, clw::Location_Device,
+		 clw::ImageFormat(clw::Order_R, clw::Type_Normalized_UInt8),
+		 cols, rows);
 
-	// Dane mikstur
-	const int cl_mixturesSize = nmixtures * rows * cols * sizeof(MixtureData);
-	cl_mem cl_mixtures = clCreateBuffer(context.contextId(),
-		CL_MEM_READ_WRITE, cl_mixturesSize, nullptr, &error);
-	assert(error == CL_SUCCESS);
-	clw::Buffer mixtureData(&context, cl_mixtures);
+	// Dane mikstur (stan wewnetrzny estymatora tla)
+	const int mixtureDataSize = nmixtures * rows * cols * sizeof(MixtureData);
+	clw::Buffer mixtureData = context.createBuffer
+		(clw::Access_ReadWrite, clw::Location_Device, mixtureDataSize);
 
 	// Wyzerowane
 	void* ptr = queue.mapBuffer(mixtureData, clw::Access_WriteOnly);
-	memset(ptr, 0, cl_mixturesSize);
+	memset(ptr, 0, mixtureDataSize);
 	queue.unmap(mixtureData, ptr);
 
 	// Parametry stale dla kernela
@@ -180,27 +173,26 @@ int main(int, char**)
 		float var0; // wariancja dla nowej mikstury
 		float minVar; // dolny prog mozliwej wariancji
 	};
-	MogParams mogParams;
-	mogParams.varThreshold = defaultVarianceThreshold;
-	mogParams.backgroundRatio = defaultBackgroundRatio;
-	mogParams.w0 = defaultInitialWeight;
-	mogParams.var0 = (defaultNoiseSigma*defaultNoiseSigma*4);
-	mogParams.minVar = (defaultNoiseSigma*defaultNoiseSigma);
+	MogParams mogParams = {
+		/*.varThreshold    = */ defaultVarianceThreshold,
+		/*.backgroundRatio = */ defaultBackgroundRatio,
+		/*.w0              = */ defaultInitialWeight,
+		/*.var0            = */ (defaultNoiseSigma*defaultNoiseSigma*4),
+		/*.minVar          = */ (defaultNoiseSigma*defaultNoiseSigma),
+	};
 
-	cl_mem cl_params = clCreateBuffer(context.contextId(),
-		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-		sizeof(MogParams), &mogParams, &error);
-	assert(error == CL_SUCCESS);
-	clw::Buffer params(&context, cl_params);
+	clw::Buffer params = context.createBuffer(
+		clw::Access_ReadOnly, clw::Location_Device, 
+		sizeof(MogParams), &mogParams);
 
 	// Ustawienie argumentow i parametrow kerneli
-	kernelRgbaToGray.setLocalWorkSize(16, 16);
+	kernelRgbaToGray.setLocalWorkSize(8, 8);
 	kernelRgbaToGray.setRoundedGlobalWorkSize(cols, rows);
 	kernelRgbaToGray.setArg(0, inputFrame);
 	kernelRgbaToGray.setArg(1, grayFrame);
 	kernelRgbaToGray.setArg(2, frameSize);
 
-	kernelMoG.setLocalWorkSize(16 ,16);
+	kernelMoG.setLocalWorkSize(8 ,8);
 	kernelMoG.setRoundedGlobalWorkSize(cols, rows);
 	kernelMoG.setArg(0, grayFrame);
 	kernelMoG.setArg(1, dstFrame);
@@ -218,11 +210,13 @@ int main(int, char**)
 		if(frame.rows == 0 || frame.cols == 0)
 			break;
 
-		cl_event cl_evt_write;
-		error = clEnqueueWriteBuffer(queue.commandQueueId(), cl_inputFrame, CL_FALSE,
-			0, rows * cols * 3 * sizeof(cl_uchar), frame.data, 0, nullptr, &cl_evt_write);
-		assert(error == CL_SUCCESS);		
-		clw::Event e0(cl_evt_write);
+		void* ptr = queue.mapBuffer
+			(inputFrame, 0, inputFrameSize, clw::Access_WriteOnly);
+		//void* ptr;
+		//clw::Event e00 = queue.asyncMapBuffer
+		//	(inputFrame, &ptr, 0, inputFrameSize, clw::Access_WriteOnly);
+		memcpy(ptr, frame.data, inputFrameSize);
+		clw::Event e0 = queue.asyncUnmap(inputFrame, ptr);
 
 		++nframe;
 		float learningRate = -1.0f;
@@ -233,34 +227,22 @@ int main(int, char**)
 
 		clw::Event e1 = queue.asyncRunKernel(kernelRgbaToGray);
 		clw::Event e2 = queue.asyncRunKernel(kernelMoG);
-
-		cl_event cl_evt_readImageDst;
-		size_t origin[3] = {0, 0, 0};
-		size_t region[3] = {cols, rows, 1};
-		error = clEnqueueReadImage(queue.commandQueueId(), cl_dstFrame, CL_FALSE,
-			origin, region, 0, 0, dst.data, 0, nullptr, &cl_evt_readImageDst);
-		assert(error == CL_SUCCESS);
-		clw::Event e3(cl_evt_readImageDst);
-		
-		cl_event cl_evt_readImageGray;
-		error = clEnqueueReadImage(queue.commandQueueId(), cl_grayFrame, CL_FALSE,
-			origin, region, 0, 0, gray.data, 0, nullptr, &cl_evt_readImageGray);
-		assert(error == CL_SUCCESS);
-		clw::Event e4(cl_evt_readImageGray);
+		clw::Event e3 = queue.asyncReadImage2D(dstFrame, dst.data, 0, 0, cols, rows);
+		clw::Event e4 = queue.asyncReadImage2D(grayFrame, gray.data, 0, 0, cols, rows);
 
 		e4.waitForFinished();
 
-		double writeDuration = (e0.finishTime() - e0.startTime()) * 0.000001;
-		double colorDuration = (e1.finishTime() - e1.startTime()) * 0.000001;
-		double mogDuration = (e2.finishTime() - e2.startTime()) * 0.000001;		
-		double readDstDuration = (e3.finishTime() - e3.startTime()) * 0.000001;
-		double readGrayDuration = (e4.finishTime() - e4.startTime()) * 0.000001;
-		std::cout 
-			<< "MoG: " << mogDuration << " [ms]" <<
-			", color: " << colorDuration << " [ms]" <<
-			", writeSrc: " << writeDuration << " [ms]" <<
-			", readDst: " << readDstDuration << " [ms]" <<
-			", readGray: " << readGrayDuration << " [ms]\n";
+		//double writeDuration = (e0.finishTime() - e0.startTime()) * 0.000001;
+		//double colorDuration = (e1.finishTime() - e1.startTime()) * 0.000001;
+		//double mogDuration = (e2.finishTime() - e2.startTime()) * 0.000001;		
+		//double readDstDuration = (e3.finishTime() - e3.startTime()) * 0.000001;
+		//double readGrayDuration = (e4.finishTime() - e4.startTime()) * 0.000001;
+		//std::cout 
+		//	<< "MoG: " << mogDuration << " [ms]" <<
+		//	", color: " << colorDuration << " [ms]" <<
+		//	", writeSrc: " << writeDuration << " [ms]" <<
+		//	", readDst: " << readDstDuration << " [ms]" <<
+		//	", readGray: " << readGrayDuration << " [ms]\n";
 
 		cv::imshow("Result", dst);
 		cv::imshow("Gray", gray);
@@ -295,7 +277,20 @@ int main(int, char**)
 
 		double stop = timer.currentTime();
 
-		std::cout << 1.0 / (stop - start) << std::endl;		
+		std::cout << (stop - start) * 1000.0 << std::endl;
+
+		//cv::Canny(frameMask, frameMask, 3, 9);
+
+		//for(int y = 0; y < frameMask.rows; ++y)
+		//{
+		//	uchar* ptr = frameMask.ptr<uchar>(y);
+		//	uchar* src = frame.ptr<uchar>(y);
+		//	for(int x = 0; x < frameMask.cols; ++x, ++ptr, ++src)
+		//	{
+		//		if(ptr[0] > 0)
+		//			ptr[0] = src[0];
+		//	}
+		//}
 
 		// Show them
 		cv::imshow("Mixture of Guassian", frameMask);
