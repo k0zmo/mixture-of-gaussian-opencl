@@ -264,6 +264,8 @@ int main(int, char**)
 
 		//void* ptr = queue.mapBuffer
 		//	(inputFrame, 0, inputFrameSize, clw::Access_WriteOnly);
+		//memcpy(ptr, frame.data, inputFrameSize);
+
 		clw::UserEvent e000 = context.createUserEvent();
 
 		void* ptr;
@@ -275,7 +277,6 @@ int main(int, char**)
 				memcpy(ptr, frame.data, inputFrameSize);
 				e000.setStatus(clw::Status_Complete);
 			});
-		//memcpy(ptr, frame.data, inputFrameSize);
 		clw::Event e0 = queue.asyncUnmap(inputFrame, ptr, e000);
 
 		++nframe;
