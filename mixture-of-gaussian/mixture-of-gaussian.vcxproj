@@ -97,6 +97,7 @@
     <ClCompile Include="clw\clw\Platform.cpp" />
     <ClCompile Include="clw\clw\Program.cpp" />
     <ClCompile Include="clw\clw\Sampler.cpp" />
+    <ClCompile Include="ConfigFile.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MixtureOfGaussianCPU.cpp" />
     <ClCompile Include="Precompiled.cpp">
@@ -125,12 +126,14 @@
     <ClInclude Include="clw\clw\Program.h" />
     <ClInclude Include="clw\clw\Sampler.h" />
     <ClInclude Include="clw\clw\StlUtils.h" />
+    <ClInclude Include="ConfigFile.h" />
     <ClInclude Include="MixtureOfGaussianCPU.h" />
     <ClInclude Include="Precompiled.h" />
     <ClInclude Include="QPCTimer.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernels.cl" />
+    <None Include="mixture-of-gaussian.cfg" />
+    <None Include="mixture-of-gaussian.cl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

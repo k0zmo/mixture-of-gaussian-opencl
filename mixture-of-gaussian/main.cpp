@@ -7,6 +7,7 @@
 
 #include "QPCTimer.h"
 #include "MixtureOfGaussianCPU.h"
+#include "ConfigFile.h"
 
 #include "clw/clw.h"
 
@@ -85,10 +86,23 @@ std::vector<clw::Device> getSingleDevice()
 
 int main(int, char**)
 {
+	ConfigFile cfg;
+	if(!cfg.load("mixture-of-gaussian.cfg"))
+	{
+		std::cerr << "Can't load mixture-of-gaussian.cfg, qutting\n";
+		std::cin.get();
+		exit(-1);
+	}
+
+	std::string videoStream1 = cfg.value("VideoStream1", "General");
+	std::cout << "Opening video file: " << videoStream1 << std::endl;
+
 	// Open sample video
-	cv::VideoCapture cap("video-cfr23.mp4");
+	cv::VideoCapture cap(videoStream1);
 	if(!cap.isOpened())
 	{
+		std::cerr << "Can't load " << videoStream1 << ", qutting\n";
+		std::cin.get();
 		exit(-1);
 	}
 
@@ -96,10 +110,17 @@ int main(int, char**)
 	const int cols    = int(cap.get(CV_CAP_PROP_FRAME_WIDTH));
 	const int rows    = int(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
 	const int format  = int(cap.get(CV_CAP_PROP_FORMAT));
-	const int channels = 3;
+	const int channels = 3; // !TODO
 	cl_int2 frameSize = { cols, rows };
 
-	static const int nmixtures = 5;
+	
+	const int nmixtures = std::stoi(cfg.value("NumMixtures", "MogParameters"));
+	if(nmixtures <= 0)
+	{
+		std::cerr << "Parameter NumMixtures is wrong, must be more than 0\n";
+		std::cin.get();
+		std::exit(-1);
+	}
 	std::string buildOptions = "-Dmixtures=";
 	buildOptions += nmixtures + '0';
 
@@ -112,22 +133,42 @@ int main(int, char**)
 	//int channels = dummy.channels();
 	//int depth = dummy.depth();
 
+	float learningRate = std::stof(cfg.value("LearningRate", "MogParameters"));
+
 #if 1
+
+	std::string devpick = cfg.value("Device", "General");
 
 	// Initialize OpenCL
 	clw::Context context;
-	if(!context.create(getSingleDevice()))
-	//if(!context.create(clw::Gpu))
+
+	if(devpick == "pick")
 	{
-		std::cerr << "Couldn't create context, quitting\n";
-		std::exit(-1);
+		if(!context.create(getSingleDevice()))
+		{
+			std::cerr << "Couldn't create context, quitting\n";
+			std::exit(-1);
+		}
+	}
+	else
+	{
+		clw::EDeviceType type = clw::Default;
+		if(devpick == "gpu")
+			type = clw::Gpu;
+		else if(devpick == "cpu")
+			type = clw::Cpu;
+		if(!context.create(type))
+		{
+			std::cerr << "Couldn't create context, quitting\n";
+			std::exit(-1);
+		}
 	}
 
 	clw::Device device = context.devices()[0];
 	clw::CommandQueue queue = context.createCommandQueue
 		(clw::Property_ProfilingEnabled, device);
 
-	clw::Program prog = context.createProgramFromSourceFile("kernels.cl");
+	clw::Program prog = context.createProgramFromSourceFile("mixture-of-gaussian.cl");
 	if(!prog.build(buildOptions))
 	{
 		std::cout << prog.log();
@@ -173,26 +214,37 @@ int main(int, char**)
 		float var0; // wariancja dla nowej mikstury
 		float minVar; // dolny prog mozliwej wariancji
 	};
+
 	MogParams mogParams = {
-		/*.varThreshold    = */ defaultVarianceThreshold,
-		/*.backgroundRatio = */ defaultBackgroundRatio,
-		/*.w0              = */ defaultInitialWeight,
-		/*.var0            = */ (defaultNoiseSigma*defaultNoiseSigma*4),
-		/*.minVar          = */ (defaultNoiseSigma*defaultNoiseSigma),
+		/*.varThreshold    = */ std::stof(cfg.value("VarianceThreshold", "MogParameters")), // defaultVarianceThreshold
+		/*.backgroundRatio = */ std::stof(cfg.value("BackgroundRatio", "MogParameters")), // defaultBackgroundRatio
+		/*.w0              = */ std::stof(cfg.value("InitialWeight", "MogParameters")), // defaultInitialWeight
+		/*.var0            = */ std::stof(cfg.value("InitialVariance", "MogParameters")), // (defaultNoiseSigma*defaultNoiseSigma*4)
+		/*.minVar          = */ std::stof(cfg.value("MinVariance", "MogParameters")), // (defaultNoiseSigma*defaultNoiseSigma)
 	};
 
 	clw::Buffer params = context.createBuffer(
 		clw::Access_ReadOnly, clw::Location_Device, 
 		sizeof(MogParams), &mogParams);
 
+	int workGroupSizeX = std::stoi(cfg.value("X", "WorkGroupSize"));
+	int workGroupSizeY = std::stoi(cfg.value("Y", "WorkGroupSize"));
+
+	if(workGroupSizeX <= 0 || workGroupSizeY <= 0)
+	{
+		std::cerr << "Parameter X or Y in WorkGroupSize is wrong, must be more than 0\n";
+		std::cin.get();
+		std::exit(-1);
+	}
+
 	// Ustawienie argumentow i parametrow kerneli
-	kernelRgbaToGray.setLocalWorkSize(8, 8);
+	kernelRgbaToGray.setLocalWorkSize(workGroupSizeX, workGroupSizeY);
 	kernelRgbaToGray.setRoundedGlobalWorkSize(cols, rows);
 	kernelRgbaToGray.setArg(0, inputFrame);
 	kernelRgbaToGray.setArg(1, grayFrame);
 	kernelRgbaToGray.setArg(2, frameSize);
 
-	kernelMoG.setLocalWorkSize(8 ,8);
+	kernelMoG.setLocalWorkSize(workGroupSizeX, workGroupSizeY);
 	kernelMoG.setRoundedGlobalWorkSize(cols, rows);
 	kernelMoG.setArg(0, grayFrame);
 	kernelMoG.setArg(1, dstFrame);
@@ -210,16 +262,25 @@ int main(int, char**)
 		if(frame.rows == 0 || frame.cols == 0)
 			break;
 
-		void* ptr = queue.mapBuffer
-			(inputFrame, 0, inputFrameSize, clw::Access_WriteOnly);
-		//void* ptr;
-		//clw::Event e00 = queue.asyncMapBuffer
-		//	(inputFrame, &ptr, 0, inputFrameSize, clw::Access_WriteOnly);
-		memcpy(ptr, frame.data, inputFrameSize);
-		clw::Event e0 = queue.asyncUnmap(inputFrame, ptr);
+		//void* ptr = queue.mapBuffer
+		//	(inputFrame, 0, inputFrameSize, clw::Access_WriteOnly);
+		cl_int error;
+		cl_event event = clCreateUserEvent(context.contextId(), &error);
+		clw::Event e000(event);
+
+		void* ptr;
+		clw::Event e00 = queue.asyncMapBuffer
+			(inputFrame, &ptr, 0, inputFrameSize, clw::Access_WriteOnly);
+		e00.setCallback(clw::Status_Complete, 
+			[&](clw::EEventStatus status)
+			{
+				memcpy(ptr, frame.data, inputFrameSize);
+				clSetUserEventStatus(event, CL_COMPLETE);
+			});
+		//memcpy(ptr, frame.data, inputFrameSize);
+		clw::Event e0 = queue.asyncUnmap(inputFrame, ptr, e000);
 
 		++nframe;
-		float learningRate = -1.0f;
 		float alpha = learningRate >= 0 && nframe > 1 
 			? learningRate
 			: 1.0f/std::min(nframe, defaultHistory);
@@ -273,7 +334,7 @@ int main(int, char**)
 		double start = timer.currentTime();
 
 		cv::Mat	frameMask;
-		MOG(frame, frameMask, -1);
+		MOG(frame, frameMask, learningRate);
 
 		double stop = timer.currentTime();
 

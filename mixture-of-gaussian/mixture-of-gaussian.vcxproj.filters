@@ -65,6 +65,9 @@
     <ClCompile Include="clw\clw\Sampler.cpp">
       <Filter>clw</Filter>
     </ClCompile>
+    <ClCompile Include="ConfigFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -121,9 +124,15 @@
     <ClInclude Include="clw\clw\StlUtils.h">
       <Filter>clw</Filter>
     </ClInclude>
+    <ClInclude Include="ConfigFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernels.cl">
+    <None Include="mixture-of-gaussian.cfg">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="mixture-of-gaussian.cl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
