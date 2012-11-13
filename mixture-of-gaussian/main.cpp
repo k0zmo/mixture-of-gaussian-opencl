@@ -256,47 +256,33 @@ int main(int, char**)
 
 	for(;;)
 	{
-		cv::Mat frame, gray(rows, cols, CV_8UC1), dst(rows, cols, CV_8UC1);
-		cap >> frame;
-
-		if(frame.rows == 0 || frame.cols == 0)
-			break;
-
-		//void* ptr = queue.mapBuffer
-		//	(inputFrame, 0, inputFrameSize, clw::Access_WriteOnly);
-		//memcpy(ptr, frame.data, inputFrameSize);
-
-		clw::UserEvent e000 = context.createUserEvent();
-
-		void* ptr;
-		clw::Event e00 = queue.asyncMapBuffer
-			(inputFrame, &ptr, 0, inputFrameSize, clw::MapAccess_Write);
-		e00.setCallback(clw::Status_Complete, 
-			[&](clw::EEventStatus status)
-			{
-				memcpy(ptr, frame.data, inputFrameSize);
-				e000.setStatus(clw::Status_Complete);
-			});
-		clw::Event e0 = queue.asyncUnmap(inputFrame, ptr, e000);
-
+		// Calculate dynamic learning rate (if necessary)
 		++nframe;
 		float alpha = learningRate >= 0 && nframe > 1 
 			? learningRate
 			: 1.0f/std::min(nframe, defaultHistory);
 		kernelMoG.setArg(4, alpha);
 
+		cv::Mat frame, gray(rows, cols, CV_8UC1), dst(rows, cols, CV_8UC1);
+		cap >> frame;
+
+		if(frame.rows == 0 || frame.cols == 0)
+			break;
+
+		clw::Event e0 = queue.asyncWriteBuffer(inputFrame, frame.data, 0, inputFrameSize);
 		clw::Event e1 = queue.asyncRunKernel(kernelRgbaToGray);
-		clw::Event e2 = queue.asyncRunKernel(kernelMoG);
-		clw::Event e3 = queue.asyncReadImage2D(dstFrame, dst.data, 0, 0, cols, rows);
-		clw::Event e4 = queue.asyncReadImage2D(grayFrame, gray.data, 0, 0, cols, rows);
+		clw::Event e2 = queue.asyncReadImage2D(grayFrame, gray.data, 0, 0, cols, rows);
+		clw::Event e3 = queue.asyncRunKernel(kernelMoG);		
+		clw::Event e4 = queue.asyncReadImage2D(dstFrame, dst.data, 0, 0, cols, rows);		
 
 		e4.waitForFinished();
 
 		//double writeDuration = (e0.finishTime() - e0.startTime()) * 0.000001;
 		//double colorDuration = (e1.finishTime() - e1.startTime()) * 0.000001;
-		//double mogDuration = (e2.finishTime() - e2.startTime()) * 0.000001;		
-		//double readDstDuration = (e3.finishTime() - e3.startTime()) * 0.000001;
-		//double readGrayDuration = (e4.finishTime() - e4.startTime()) * 0.000001;
+		//double readGrayDuration = (e2.finishTime() - e2.startTime()) * 0.000001;
+		//double mogDuration = (e3.finishTime() - e3.startTime()) * 0.000001;		
+		//double readDstDuration = (e4.finishTime() - e4.startTime()) * 0.000001;
+		//
 		//std::cout 
 		//	<< "MoG: " << mogDuration << " [ms]" <<
 		//	", color: " << colorDuration << " [ms]" <<
