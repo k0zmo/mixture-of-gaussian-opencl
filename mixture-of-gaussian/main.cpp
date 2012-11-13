@@ -201,7 +201,7 @@ int main(int, char**)
 		(clw::Access_ReadWrite, clw::Location_Device, mixtureDataSize);
 
 	// Wyzerowane
-	void* ptr = queue.mapBuffer(mixtureData, clw::Access_WriteOnly);
+	void* ptr = queue.mapBuffer(mixtureData, clw::MapAccess_Write);
 	memset(ptr, 0, mixtureDataSize);
 	queue.unmap(mixtureData, ptr);
 
@@ -270,7 +270,7 @@ int main(int, char**)
 
 		void* ptr;
 		clw::Event e00 = queue.asyncMapBuffer
-			(inputFrame, &ptr, 0, inputFrameSize, clw::Access_WriteOnly);
+			(inputFrame, &ptr, 0, inputFrameSize, clw::MapAccess_Write);
 		e00.setCallback(clw::Status_Complete, 
 			[&](clw::EEventStatus status)
 			{
