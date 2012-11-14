@@ -176,7 +176,7 @@ int main(int, char**)
 	}
 	std::cout << prog.log();
 	clw::Kernel kernelRgbaToGray = prog.createKernel("rgb2gray_image");
-	clw::Kernel kernelMoG = prog.createKernel("mog");
+	clw::Kernel kernelMoG = prog.createKernel("mog_image");
 
 	// Obraz wejsciowy kolorowy - BGR (jako bufor)
 	int inputFrameSize = rows * cols * channels * sizeof(cl_uchar);

@@ -47,6 +47,33 @@ __kernel void rgb2gray_image(
 	write_imagef(dst, gid, (float4) gray);
 }
 
+__kernel void rgb2gray(
+	__global uchar* src,
+	__global uchar* dst,
+	const int2 size)
+{
+	const int2 gid = { get_global_id(0), get_global_id(1) };
+	
+	if(!all(gid < size))
+		return;
+		
+	const int gid1 = gid.x + gid.y * size.x;
+
+#if __OPENCL_VERSION__ == CL_VERSION_1_0
+	float r = convert_float(src[3*gid1 + 0]);
+	float g = convert_float(src[3*gid1 + 1]);
+	float b = convert_float(src[3*gid1 + 2]);
+	float4 rgba = { r, g, b, 0 };
+	float gray = dot(grayscale_scaled, rgba / 255.0f);
+#else
+	uchar3 rgb = vload3(gid1, src);
+	float3 rgba = convert_float3(rgb);
+	float gray = dot(grayscale.xyz, rgba / 255.0f);
+#endif
+	dst[gid1] = convert_uchar_sat(gray * 255.0f);
+}
+
+
 typedef struct MixtureData
 {
 	float weight;
@@ -67,7 +94,7 @@ typedef struct MogParams
 #define nmixtures 5
 #endif
 
-__kernel void mog(
+__kernel void mog_image(
 	__read_only image2d_t frame,
 	__write_only image2d_t dst,
 	__global MixtureData* mptr,
