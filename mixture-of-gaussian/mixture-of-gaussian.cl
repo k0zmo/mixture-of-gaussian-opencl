@@ -109,8 +109,10 @@ __kernel void mog_image(
 		return;
 		
 	float pix = read_imagef(frame, smp, gid).x * 255.0f;
-	bool pdfMatched = -1;	
 	const int gid1 = gid.x + gid.y * size.x;
+	int pdfMatched = -1;
+
+	__private float sortKey[nmixtures];
 
 	for(int mx = 0; mx < nmixtures; ++mx)
 	{
@@ -177,7 +179,6 @@ __kernel void mog_image(
 		weightSum += MIXTURE(mx).weight;
 
 	float invSum = 1.0f / weightSum;
-	float sortKey[5];
 	#pragma unroll nmixtures
 	for(int mx = 0; mx < nmixtures; ++mx)
 	{
