@@ -112,23 +112,31 @@ __kernel void mog_image(
 	const int gid1 = gid.x + gid.y * size.x;
 	int pdfMatched = -1;
 
+	__private float weight[nmixtures];
+	__private float mean[nmixtures];
+	__private float var[nmixtures];
 	__private float sortKey[nmixtures];
 
+	#pragma unroll nmixtures
 	for(int mx = 0; mx < nmixtures; ++mx)
 	{
-		float diff = pix - MIXTURE(mx).mean;
-		float d2 = diff*diff;
-		float threshold = params->varThreshold * MIXTURE(mx).var;
-		
-		// To samo co:
-		// if (diff > -2.5f * var && 
-		//     diff < +2.5f * var)
+		weight[mx] = MIXTURE(mx).weight;
+		mean[mx] = MIXTURE(mx).mean;
+		var[mx] = MIXTURE(mx).var;
 
-		// Mahalanobis distance
-		if(d2 < threshold)
+		if(pdfMatched < 0)
 		{
-			pdfMatched = mx;
-			break;
+			float diff = pix - mean[mx];
+			float d2 = diff*diff;
+			float threshold = params->varThreshold * var[mx];
+		
+			// To samo co:
+			// if (diff > -2.5f * var && 
+			//     diff < +2.5f * var)
+
+			// Mahalanobis distance
+			if(d2 < threshold)
+				pdfMatched = mx;
 		}
 	}
 	
@@ -137,29 +145,25 @@ __kernel void mog_image(
 		// No matching mixture found - replace the weakest one
 		pdfMatched = nmixtures - 1; 
 
-		MIXTURE(pdfMatched).weight = params->w0;
-		MIXTURE(pdfMatched).mean = pix;
-		MIXTURE(pdfMatched).var = params->var0;
+		weight[pdfMatched] = params->w0;
+		mean[pdfMatched] = pix;
+		var[pdfMatched] = params->var0;
 	}
 	else
 	{
 		#pragma unroll nmixtures
 		for(int mx = 0; mx < nmixtures; ++mx)
 		{
-			float weight = MIXTURE(mx).weight;
-
 			if(mx == pdfMatched)
 			{
-				float mu = MIXTURE(mx).mean;
-				float diff = pix - mu;
-				float var = MIXTURE(mx).var;
+				float diff = pix - mean[mx];
 
 				//static const float PI = 3.14159265358979323846f;
 				//float ni = 1.0f / sqrtf(2.0f * PI * var) * expf(-0.5f * diff*diff / var);
 
-				MIXTURE(mx).weight = weight + alpha * (1 - weight);
-				MIXTURE(mx).mean = mu + alpha * diff;
-				MIXTURE(mx).var = max(params->minVar, var + alpha * (diff*diff - var));
+				weight[mx] = weight[mx] + alpha * (1 - weight[mx]);
+				mean[mx] = mean[mx] + alpha * diff;
+				var[mx] = max(params->minVar, var[mx] + alpha * (diff*diff - var[mx]));
 			}
 			else
 			{
@@ -167,7 +171,7 @@ __kernel void mog_image(
 				// are unchanged, only the weight is replaced by:
 				// weight = (1 - alpha) * weight;
 
-				MIXTURE(mx).weight = (1 - alpha) * weight;
+				weight[mx] = (1 - alpha) * weight[mx];
 			}
 		}
 	}
@@ -176,15 +180,15 @@ __kernel void mog_image(
 	float weightSum = 0.0f;
 	#pragma unroll nmixtures
 	for(int mx = 0; mx < nmixtures; ++mx)
-		weightSum += MIXTURE(mx).weight;
+		weightSum += weight[mx];
 
 	float invSum = 1.0f / weightSum;
 	#pragma unroll nmixtures
 	for(int mx = 0; mx < nmixtures; ++mx)
 	{
-		MIXTURE(mx).weight *= invSum;
-		sortKey[mx] = MIXTURE(mx).var > DBL_MIN
-			? MIXTURE(mx).weight / sqrt(MIXTURE(mx).var)
+		weight[mx] *= invSum;
+		sortKey[mx] = var[mx] > FLT_MIN
+			? weight[mx] / sqrt(var[mx])
 			: 0;
 	}
 
@@ -195,11 +199,27 @@ __kernel void mog_image(
 	{
 		if(sortKey[pdfMatched] > sortKey[mx])
 		{
-			MixtureData tmp = MIXTURE(pdfMatched);
-			MIXTURE(pdfMatched) = MIXTURE(mx);
-			MIXTURE(mx) = tmp;
+			float weightTemp = weight[pdfMatched];
+			float meanTemp = mean[pdfMatched];
+			float varTemp = var[pdfMatched];
+
+			weight[pdfMatched] = weight[mx];
+			mean[pdfMatched] = mean[mx];
+			var[pdfMatched] = var[mx];
+
+			weight[mx] = weightTemp;
+			mean[mx] = meanTemp;
+			var[mx] = varTemp;
 			break;
 		}
+	}
+
+	#pragma unroll nmixtures
+	for(int mx = 0; mx < nmixtures; ++mx)
+	{
+		MIXTURE(mx).weight = weight[mx];
+		MIXTURE(mx).mean = mean[mx];
+		MIXTURE(mx).var = var[mx];
 	}
 
 	// No match is found with any of the K Gaussians.
@@ -223,7 +243,7 @@ __kernel void mog_image(
 
 		// The other distributions are considered
 		// to represent a foreground distribution
-		weightSum += MIXTURE(mx).weight;
+		weightSum += weight[mx];
 
 		if(weightSum > params->backgroundRatio)
 		{
