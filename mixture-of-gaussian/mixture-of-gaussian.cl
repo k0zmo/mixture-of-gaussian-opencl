@@ -73,7 +73,6 @@ __kernel void rgb2gray(
 	dst[gid1] = convert_uchar_sat(gray * 255.0f);
 }
 
-
 typedef struct MixtureData
 {
 	float weight;
@@ -94,6 +93,8 @@ typedef struct MogParams
 #define nmixtures 5
 #endif
 
+#define MIXTURE(mx) mptr[gid1 * nmixtures + mx]
+
 __kernel void mog_image(
 	__read_only image2d_t frame,
 	__write_only image2d_t dst,
@@ -108,14 +109,9 @@ __kernel void mog_image(
 		return;
 		
 	float pix = read_imagef(frame, smp, gid).x * 255.0f;
-	
 	bool pdfMatched = -1;	
-	//const int nmixtures = params->nmixtures;
-	
 	const int gid1 = gid.x + gid.y * size.x;
-	#define MIXTURE(mx) mptr[gid1 * nmixtures + mx]
-	
-	#pragma unroll nmixtures
+
 	for(int mx = 0; mx < nmixtures; ++mx)
 	{
 		float diff = pix - MIXTURE(mx).mean;
@@ -123,8 +119,8 @@ __kernel void mog_image(
 		float threshold = params->varThreshold * MIXTURE(mx).var;
 		
 		// To samo co:
-		 // if (diff > -2.5f * var && 
-				// diff < +2.5f * var)
+		// if (diff > -2.5f * var && 
+		//     diff < +2.5f * var)
 
 		// Mahalanobis distance
 		if(d2 < threshold)
@@ -194,7 +190,6 @@ __kernel void mog_image(
 	// Sort mixtures (buble sort).
 	// Every mixtures but the one with "completely new" weight and variance
 	// are already sorted thus we need to reorder only that single mixture.
-
 	for(int mx = 0; mx < pdfMatched; ++mx)
 	{
 		if(sortKey[pdfMatched] > sortKey[mx])
@@ -219,7 +214,6 @@ __kernel void mog_image(
 	// the pixel is classified as background,
 	// otherwise pixel represents the foreground
 	weightSum = 0.0f;
-	#pragma unroll nmixtures
 	for(int mx = 0; mx < nmixtures; ++mx)
 	{
 		// The first Gaussian distributions which exceed
