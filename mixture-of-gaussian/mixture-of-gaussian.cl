@@ -73,13 +73,6 @@ __kernel void rgb2gray(
 	dst[gid1] = convert_uchar_sat(gray * 255.0f);
 }
 
-typedef struct MixtureData
-{
-	float weight;
-	float mean;
-	float var;
-} MixtureData;
-
 typedef struct MogParams
 {
 	float varThreshold;
@@ -93,12 +86,10 @@ typedef struct MogParams
 #define nmixtures 5
 #endif
 
-#define MIXTURE(mx) mptr[gid1 * nmixtures + mx]
-
 __kernel void mog_image(
 	__read_only image2d_t frame,
 	__write_only image2d_t dst,
-	__global MixtureData* mptr,
+	__global float* mixtureData,
 	__constant MogParams* params,
 	const float alpha) // krzywa uczenia
 {
@@ -110,6 +101,7 @@ __kernel void mog_image(
 		
 	float pix = read_imagef(frame, smp, gid).x * 255.0f;
 	const int gid1 = gid.x + gid.y * size.x;
+	const int size1 = size.x * size.y;
 	int pdfMatched = -1;
 
 	__private float weight[nmixtures];
@@ -120,9 +112,9 @@ __kernel void mog_image(
 	#pragma unroll nmixtures
 	for(int mx = 0; mx < nmixtures; ++mx)
 	{
-		weight[mx] = MIXTURE(mx).weight;
-		mean[mx] = MIXTURE(mx).mean;
-		var[mx] = MIXTURE(mx).var;
+		weight[mx] = mixtureData[gid1 + size1 * (mx + 0 * nmixtures)];
+		mean[mx]   = mixtureData[gid1 + size1 * (mx + 1 * nmixtures)];
+		var[mx]    = mixtureData[gid1 + size1 * (mx + 2 * nmixtures)];
 
 		if(pdfMatched < 0)
 		{
@@ -217,9 +209,9 @@ __kernel void mog_image(
 	#pragma unroll nmixtures
 	for(int mx = 0; mx < nmixtures; ++mx)
 	{
-		MIXTURE(mx).weight = weight[mx];
-		MIXTURE(mx).mean = mean[mx];
-		MIXTURE(mx).var = var[mx];
+		mixtureData[gid1 + size1 * (mx + 0 * nmixtures)] = weight[mx];
+		mixtureData[gid1 + size1 * (mx + 1 * nmixtures)] = mean[mx];
+		mixtureData[gid1 + size1 * (mx + 2 * nmixtures)] = var[mx];
 	}
 
 	// No match is found with any of the K Gaussians.

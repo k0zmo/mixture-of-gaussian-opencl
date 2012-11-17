@@ -196,7 +196,8 @@ int main(int, char**)
 		 cols, rows);
 
 	// Dane mikstur (stan wewnetrzny estymatora tla)
-	const int mixtureDataSize = nmixtures * rows * cols * sizeof(MixtureData);
+	const int mixtureDataSize = nmixtures * rows * cols * 3 * sizeof(float);
+
 	clw::Buffer mixtureData = context.createBuffer
 		(clw::Access_ReadWrite, clw::Location_Device, mixtureDataSize);
 
