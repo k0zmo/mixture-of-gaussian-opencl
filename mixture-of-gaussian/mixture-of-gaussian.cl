@@ -150,12 +150,12 @@ __kernel void mog_image(
 			{
 				float diff = pix - mean[mx];
 
-				//static const float PI = 3.14159265358979323846f;
-				//float ni = 1.0f / sqrtf(2.0f * PI * var) * expf(-0.5f * diff*diff / var);
+				#define PI_MULT_2 6.28318530717958647692f
+				float rho = alpha / native_sqrt(PI_MULT_2 * var[mx]) * native_exp(-0.5f * diff*diff / var[mx]);
 
 				weight[mx] = weight[mx] + alpha * (1 - weight[mx]);
-				mean[mx] = mean[mx] + alpha * diff;
-				var[mx] = max(params->minVar, var[mx] + alpha * (diff*diff - var[mx]));
+				mean[mx] = mean[mx] + rho * diff;
+				var[mx] = max(params->minVar, var[mx] + rho * (diff*diff - var[mx]));
 			}
 			else
 			{
@@ -180,7 +180,7 @@ __kernel void mog_image(
 	{
 		weight[mx] *= invSum;
 		sortKey[mx] = var[mx] > FLT_MIN
-			? weight[mx] / sqrt(var[mx])
+			? weight[mx] / native_sqrt(var[mx])
 			: 0;
 	}
 
