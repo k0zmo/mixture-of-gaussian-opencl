@@ -17,7 +17,7 @@ solution "mixture-of-gaussian"
     	
     	files {
     		"clw/clw/*.cpp", "clw/clw/*.h",
-    		"main.cpp", "MixtureOfGaussianCPU.*", "QPCTimer.*",
+    		"main.cpp", "MixtureOfGaussianCPU.*", "QPCTimer.*", "ConfigFile.*"
     	}
 			
 		links {
