@@ -132,6 +132,7 @@
     <ClInclude Include="QPCTimer.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="color_conversion.cl" />
     <None Include="mixture-of-gaussian.cfg" />
     <None Include="mixture-of-gaussian.cl" />
   </ItemGroup>

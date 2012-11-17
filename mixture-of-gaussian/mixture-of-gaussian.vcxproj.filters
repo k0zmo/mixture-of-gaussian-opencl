@@ -135,5 +135,8 @@
     <None Include="mixture-of-gaussian.cl">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="color_conversion.cl">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

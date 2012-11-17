@@ -84,6 +84,82 @@ std::vector<clw::Device> getSingleDevice()
 	return devices;
 }
 
+clw::Kernel createRgb2GrayKernel(clw::Context& context)
+{
+	clw::Program progCvt = context.createProgramFromSourceFile("color-conversion.cl");
+	if(!progCvt.build())
+	{
+		std::cout << progCvt.log();
+		std::exit(-1);
+	}
+	std::cout << progCvt.log();
+	return progCvt.createKernel("rgb2gray_image");
+}
+
+clw::Kernel createMoGKernel(clw::Context& context, int nmixtures)
+{
+	std::string buildOptions = "-Dmixtures=";
+	buildOptions += nmixtures + '0';
+
+	clw::Program progMog = context.createProgramFromSourceFile("mixture-of-gaussian.cl");
+	if(!progMog.build(buildOptions))
+	{
+		std::cout << progMog.log();
+		std::exit(-1);
+	}
+	std::cout << progMog.log();
+	return progMog.createKernel("mog_image");
+}
+
+clw::Buffer createMixtureDataBuffer(clw::Context& context,
+									clw::CommandQueue& queue, 
+									int npixels,
+									int nmixtures)
+{
+	// Dane mikstur (stan wewnetrzny estymatora tla)
+	const int mixtureDataSize = nmixtures * npixels * 3 * sizeof(float);
+
+	clw::Buffer mixtureData = context.createBuffer
+		(clw::Access_ReadWrite, clw::Location_Device, mixtureDataSize);
+
+	// Wyzerowane
+	void* ptr = queue.mapBuffer(mixtureData, clw::MapAccess_Write);
+	memset(ptr, 0, mixtureDataSize);
+	queue.unmap(mixtureData, ptr);
+
+	return mixtureData;
+}
+
+clw::Buffer createMixtureParamsBuffer(clw::Context& context,
+									  float varianceThreshold,
+									  float backgroundRatio,
+									  float initialWeight,
+									  float initialVariance,
+									  float minVariance)
+{
+	// Parametry stale dla kernela
+	struct MogParams
+	{
+		float varThreshold;
+		float backgroundRatio;
+		float w0; // waga dla nowej mikstury
+		float var0; // wariancja dla nowej mikstury
+		float minVar; // dolny prog mozliwej wariancji
+	};
+
+	MogParams mogParams = {
+		varianceThreshold,
+		backgroundRatio,
+		initialWeight,
+		initialVariance,
+		minVariance
+	};
+
+	return context.createBuffer(
+		clw::Access_ReadOnly, clw::Location_Device, 
+		sizeof(MogParams), &mogParams);
+}
+
 int main(int, char**)
 {
 	ConfigFile cfg;
@@ -121,8 +197,6 @@ int main(int, char**)
 		std::cin.get();
 		std::exit(-1);
 	}
-	std::string buildOptions = "-Dmixtures=";
-	buildOptions += nmixtures + '0';
 
 	assert(format == CV_8U);
 
@@ -168,15 +242,8 @@ int main(int, char**)
 	clw::CommandQueue queue = context.createCommandQueue
 		(clw::Property_ProfilingEnabled, device);
 
-	clw::Program prog = context.createProgramFromSourceFile("mixture-of-gaussian.cl");
-	if(!prog.build(buildOptions))
-	{
-		std::cout << prog.log();
-		std::exit(-1);
-	}
-	std::cout << prog.log();
-	clw::Kernel kernelRgbaToGray = prog.createKernel("rgb2gray_image");
-	clw::Kernel kernelMoG = prog.createKernel("mog_image");
+	clw::Kernel kernelRgbToGray = createRgb2GrayKernel(context);
+	clw::Kernel kernelMoG = createMoGKernel(context, nmixtures);
 
 	// Obraz wejsciowy kolorowy - BGR (jako bufor)
 	int inputFrameSize = rows * cols * channels * sizeof(cl_uchar);
@@ -195,38 +262,13 @@ int main(int, char**)
 		 clw::ImageFormat(clw::Order_R, clw::Type_Normalized_UInt8),
 		 cols, rows);
 
-	// Dane mikstur (stan wewnetrzny estymatora tla)
-	const int mixtureDataSize = nmixtures * rows * cols * 3 * sizeof(float);
-
-	clw::Buffer mixtureData = context.createBuffer
-		(clw::Access_ReadWrite, clw::Location_Device, mixtureDataSize);
-
-	// Wyzerowane
-	void* ptr = queue.mapBuffer(mixtureData, clw::MapAccess_Write);
-	memset(ptr, 0, mixtureDataSize);
-	queue.unmap(mixtureData, ptr);
-
-	// Parametry stale dla kernela
-	struct MogParams
-	{
-		float varThreshold;
-		float backgroundRatio;
-		float w0; // waga dla nowej mikstury
-		float var0; // wariancja dla nowej mikstury
-		float minVar; // dolny prog mozliwej wariancji
-	};
-
-	MogParams mogParams = {
-		/*.varThreshold    = */ std::stof(cfg.value("VarianceThreshold", "MogParameters")), // defaultVarianceThreshold
-		/*.backgroundRatio = */ std::stof(cfg.value("BackgroundRatio", "MogParameters")), // defaultBackgroundRatio
-		/*.w0              = */ std::stof(cfg.value("InitialWeight", "MogParameters")), // defaultInitialWeight
-		/*.var0            = */ std::stof(cfg.value("InitialVariance", "MogParameters")), // (defaultNoiseSigma*defaultNoiseSigma*4)
-		/*.minVar          = */ std::stof(cfg.value("MinVariance", "MogParameters")), // (defaultNoiseSigma*defaultNoiseSigma)
-	};
-
-	clw::Buffer params = context.createBuffer(
-		clw::Access_ReadOnly, clw::Location_Device, 
-		sizeof(MogParams), &mogParams);
+	clw::Buffer mixtureData = createMixtureDataBuffer(context, queue, cols * rows, nmixtures);
+	clw::Buffer mogParams = createMixtureParamsBuffer(context,
+		std::stof(cfg.value("VarianceThreshold", "MogParameters")),
+		std::stof(cfg.value("BackgroundRatio", "MogParameters")),
+		std::stof(cfg.value("InitialWeight", "MogParameters")),
+		std::stof(cfg.value("InitialVariance", "MogParameters")),
+		std::stof(cfg.value("MinVariance", "MogParameters")));
 
 	int workGroupSizeX = std::stoi(cfg.value("X", "WorkGroupSize"));
 	int workGroupSizeY = std::stoi(cfg.value("Y", "WorkGroupSize"));
@@ -239,18 +281,18 @@ int main(int, char**)
 	}
 
 	// Ustawienie argumentow i parametrow kerneli
-	kernelRgbaToGray.setLocalWorkSize(workGroupSizeX, workGroupSizeY);
-	kernelRgbaToGray.setRoundedGlobalWorkSize(cols, rows);
-	kernelRgbaToGray.setArg(0, inputFrame);
-	kernelRgbaToGray.setArg(1, grayFrame);
-	kernelRgbaToGray.setArg(2, frameSize);
+	kernelRgbToGray.setLocalWorkSize(workGroupSizeX, workGroupSizeY);
+	kernelRgbToGray.setRoundedGlobalWorkSize(cols, rows);
+	kernelRgbToGray.setArg(0, inputFrame);
+	kernelRgbToGray.setArg(1, grayFrame);
+	kernelRgbToGray.setArg(2, frameSize);
 
 	kernelMoG.setLocalWorkSize(workGroupSizeX, workGroupSizeY);
 	kernelMoG.setRoundedGlobalWorkSize(cols, rows);
 	kernelMoG.setArg(0, grayFrame);
 	kernelMoG.setArg(1, dstFrame);
 	kernelMoG.setArg(2, mixtureData);
-	kernelMoG.setArg(3, params);
+	kernelMoG.setArg(3, mogParams);
 	kernelMoG.setArg(4, 0.0f);
 
 	int nframe = 0;
@@ -271,7 +313,7 @@ int main(int, char**)
 			break;
 
 		clw::Event e0 = queue.asyncWriteBuffer(inputFrame, frame.data, 0, inputFrameSize);
-		clw::Event e1 = queue.asyncRunKernel(kernelRgbaToGray);
+		clw::Event e1 = queue.asyncRunKernel(kernelRgbToGray);
 		clw::Event e2 = queue.asyncReadImage2D(grayFrame, gray.data, 0, 0, cols, rows);
 		clw::Event e3 = queue.asyncRunKernel(kernelMoG);		
 		clw::Event e4 = queue.asyncReadImage2D(dstFrame, dst.data, 0, 0, cols, rows);		
