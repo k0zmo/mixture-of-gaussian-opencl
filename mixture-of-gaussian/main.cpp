@@ -306,7 +306,7 @@ int main(int, char**)
 			: 1.0f/std::min(nframe, defaultHistory);
 		kernelMoG.setArg(4, alpha);
 
-		cv::Mat frame, gray(rows, cols, CV_8UC1), dst(rows, cols, CV_8UC1);
+		cv::Mat frame, dst(rows, cols, CV_8UC1);
 		cap >> frame;
 
 		if(frame.rows == 0 || frame.cols == 0)
@@ -314,27 +314,24 @@ int main(int, char**)
 
 		clw::Event e0 = queue.asyncWriteBuffer(inputFrame, frame.data, 0, inputFrameSize);
 		clw::Event e1 = queue.asyncRunKernel(kernelRgbToGray);
-		clw::Event e2 = queue.asyncReadImage2D(grayFrame, gray.data, 0, 0, cols, rows);
-		clw::Event e3 = queue.asyncRunKernel(kernelMoG);		
-		clw::Event e4 = queue.asyncReadImage2D(dstFrame, dst.data, 0, 0, cols, rows);		
+		clw::Event e2 = queue.asyncRunKernel(kernelMoG);		
+		clw::Event e3 = queue.asyncReadImage2D(dstFrame, dst.data, 0, 0, cols, rows);		
 
-		e4.waitForFinished();
+		e3.waitForFinished();
 
 		//double writeDuration = (e0.finishTime() - e0.startTime()) * 0.000001;
 		//double colorDuration = (e1.finishTime() - e1.startTime()) * 0.000001;
-		//double readGrayDuration = (e2.finishTime() - e2.startTime()) * 0.000001;
-		//double mogDuration = (e3.finishTime() - e3.startTime()) * 0.000001;		
-		//double readDstDuration = (e4.finishTime() - e4.startTime()) * 0.000001;
+		//double mogDuration = (e2.finishTime() - e2.startTime()) * 0.000001;		
+		//double readDstDuration = (e3.finishTime() - e3.startTime()) * 0.000001;
 		//
 		//std::cout 
 		//	<< "MoG: " << mogDuration << " [ms]" <<
 		//	", color: " << colorDuration << " [ms]" <<
 		//	", writeSrc: " << writeDuration << " [ms]" <<
-		//	", readDst: " << readDstDuration << " [ms]" <<
-		//	", readGray: " << readGrayDuration << " [ms]\n";
+		//	", readDst: " << readDstDuration << " [ms]\n";
 
-		cv::imshow("Result", dst);
-		cv::imshow("Gray", gray);
+		cv::imshow("Input", frame);
+		cv::imshow("Result", dst);		
 
 		int key = cv::waitKey(30);
 		if(key >= 0)
