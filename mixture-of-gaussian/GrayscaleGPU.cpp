@@ -46,7 +46,6 @@ clw::Event GrayscaleGPU::process(clw::Buffer& inputImage)
 	return queue.asyncRunKernel(kernel);
 }
 
-
 void GrayscaleGPU::createRgb2GrayKernel()
 {
 	clw::Program progCvt = context.createProgramFromSourceFile("color-conversion.cl");
@@ -65,6 +64,6 @@ void GrayscaleGPU::createOutputImage(int width,
 	// Obraz w skali szarosci
 	outputImage = context.createImage2D
 		(clw::Access_ReadWrite, clw::Location_Device,
-			clw::ImageFormat(clw::Order_R, clw::Type_Normalized_UInt8),
-			width, height);
+		 clw::ImageFormat(clw::Order_R, clw::Type_Normalized_UInt8),
+		 width, height);
 }
