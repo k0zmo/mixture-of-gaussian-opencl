@@ -12,6 +12,9 @@
     <Filter Include="clw">
       <UniqueIdentifier>{c4ce6b23-2332-4465-a91d-de586d497410}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Other files">
+      <UniqueIdentifier>{8cdb006d-ae13-42d6-b723-3794f2cf58be}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -66,6 +69,12 @@
       <Filter>clw</Filter>
     </ClCompile>
     <ClCompile Include="ConfigFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MixtureOfGaussianGPU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GrayscaleGPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -127,16 +136,22 @@
     <ClInclude Include="ConfigFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MixtureOfGaussianGPU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GrayscaleGPU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="mixture-of-gaussian.cfg">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="mixture-of-gaussian.cl">
-      <Filter>Source Files</Filter>
+      <Filter>Other files</Filter>
+    </None>
+    <None Include="mixture-of-gaussian.cfg">
+      <Filter>Other files</Filter>
     </None>
     <None Include="color-conversion.cl">
-      <Filter>Source Files</Filter>
+      <Filter>Other files</Filter>
     </None>
   </ItemGroup>
 </Project>

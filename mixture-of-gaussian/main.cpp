@@ -6,158 +6,88 @@
 #include <iostream>
 
 #include "QPCTimer.h"
-#include "MixtureOfGaussianCPU.h"
 #include "ConfigFile.h"
 
-#include "clw/clw.h"
+#include <clw/clw.h>
 
-std::vector<clw::Device> getSingleDevice()
+#include "MixtureOfGaussianCPU.h"
+#include "MixtureOfGaussianGPU.h"
+#include "GrayscaleGPU.h"
+
+namespace clwutils
 {
-	std::vector<clw::Platform> platforms = clw::availablePlatforms();
-	if(platforms.empty())
+	std::vector<clw::Device> pickSingleDevice()
 	{
-		std::cerr << "No OpenCL platfrom has been detected!\n";
-		std::exit(-1);
-	}
-
-	clw::Platform platform;
-
-	// Jesli mamy tylko jedna platforme to ja wybierz bez pytania
-	if(platforms.size() == 1)
-	{
-		platform = platforms[0];
-		std::cout << "Using OpenCL platform: " << platform.name() 
-			<< ", " << platform.versionString() << std::endl;
-	}
-	else
-	{
-		std::cout << "List of available OpenCL platforms: \n";
-
-		for(size_t index = 0; index < platforms.size(); ++index)
+		std::vector<clw::Platform> platforms = clw::availablePlatforms();
+		if(platforms.empty())
 		{
-			std::cout << "  " << index + 1 << ") " 
-				<< platforms[index].name() << std::endl;
+			std::cerr << "No OpenCL platfrom has been detected!\n";
+			std::exit(-1);
 		}
 
-		int choice = 0;
-		while(choice > (int)(platforms.size()) || choice <= 0)
+		clw::Platform platform;
+
+		// Jesli mamy tylko jedna platforme to ja wybierz bez pytania
+		if(platforms.size() == 1)
 		{
-			std::cout << "Choose OpenCL platform: ";
-			std::cin >> choice;
-			std::cin.clear();
-			std::cin.sync();
+			platform = platforms[0];
+			std::cout << "Using OpenCL platform: " << platform.name() 
+				<< ", " << platform.versionString() << std::endl;
 		}
-		platform = platforms[choice-1];
-	}
-
-	std::vector<clw::Device> devices = clw::devices(clw::All, platform);
-
-	// Wybierz urzadzenie
-	if(devices.size() == 1)
-	{
-		std::cout << "Using " << devices[0].name() << std::endl;
-	}
-	else
-	{
-		std::cout << "\nList of available devices:\n";
-		for(size_t index = 0; index < devices.size(); ++index)
+		else
 		{
-			std::cout << "  " << index + 1 << ") " << devices[index].name()
-				<< ", " << devices[index].vendor() << std::endl;
-		}
-		std::cout << "\n";
+			std::cout << "List of available OpenCL platforms: \n";
 
-		int choice = 0;
-		while(choice > (int)(devices.size()) || choice <= 0)
-		{
-			std::cout << "Choose OpenCL device: ";
-			std::cin >> choice;
-			std::cin.clear();
-			std::cin.sync();
+			for(size_t index = 0; index < platforms.size(); ++index)
+			{
+				std::cout << "  " << index + 1 << ") " 
+					<< platforms[index].name() << std::endl;
+			}
+
+			int choice = 0;
+			while(choice > (int)(platforms.size()) || choice <= 0)
+			{
+				std::cout << "Choose OpenCL platform: ";
+				std::cin >> choice;
+				std::cin.clear();
+				std::cin.sync();
+			}
+			platform = platforms[choice-1];
 		}
 
-		clw::Device dev = devices[choice-1];
-		devices.clear();
-		devices.push_back(dev);
+		std::vector<clw::Device> devices = clw::devices(clw::All, platform);
+
+		// Wybierz urzadzenie
+		if(devices.size() == 1)
+		{
+			std::cout << "Using " << devices[0].name() << std::endl;
+		}
+		else
+		{
+			std::cout << "\nList of available devices:\n";
+			for(size_t index = 0; index < devices.size(); ++index)
+			{
+				std::cout << "  " << index + 1 << ") " << devices[index].name()
+					<< ", " << devices[index].vendor() << std::endl;
+			}
+			std::cout << "\n";
+
+			int choice = 0;
+			while(choice > (int)(devices.size()) || choice <= 0)
+			{
+				std::cout << "Choose OpenCL device: ";
+				std::cin >> choice;
+				std::cin.clear();
+				std::cin.sync();
+			}
+
+			clw::Device dev = devices[choice-1];
+			devices.clear();
+			devices.push_back(dev);
+		}
+
+		return devices;
 	}
-
-	return devices;
-}
-
-clw::Kernel createRgb2GrayKernel(clw::Context& context)
-{
-	clw::Program progCvt = context.createProgramFromSourceFile("color-conversion.cl");
-	if(!progCvt.build())
-	{
-		std::cout << progCvt.log();
-		std::exit(-1);
-	}
-	std::cout << progCvt.log();
-	return progCvt.createKernel("rgb2gray_image");
-}
-
-clw::Kernel createMoGKernel(clw::Context& context, int nmixtures)
-{
-	std::string buildOptions = "-Dmixtures=";
-	buildOptions += nmixtures + '0';
-
-	clw::Program progMog = context.createProgramFromSourceFile("mixture-of-gaussian.cl");
-	if(!progMog.build(buildOptions))
-	{
-		std::cout << progMog.log();
-		std::exit(-1);
-	}
-	std::cout << progMog.log();
-	return progMog.createKernel("mog_image");
-}
-
-clw::Buffer createMixtureDataBuffer(clw::Context& context,
-									clw::CommandQueue& queue, 
-									int npixels,
-									int nmixtures)
-{
-	// Dane mikstur (stan wewnetrzny estymatora tla)
-	const int mixtureDataSize = nmixtures * npixels * 3 * sizeof(float);
-
-	clw::Buffer mixtureData = context.createBuffer
-		(clw::Access_ReadWrite, clw::Location_Device, mixtureDataSize);
-
-	// Wyzerowane
-	void* ptr = queue.mapBuffer(mixtureData, clw::MapAccess_Write);
-	memset(ptr, 0, mixtureDataSize);
-	queue.unmap(mixtureData, ptr);
-
-	return mixtureData;
-}
-
-clw::Buffer createMixtureParamsBuffer(clw::Context& context,
-									  float varianceThreshold,
-									  float backgroundRatio,
-									  float initialWeight,
-									  float initialVariance,
-									  float minVariance)
-{
-	// Parametry stale dla kernela
-	struct MogParams
-	{
-		float varThreshold;
-		float backgroundRatio;
-		float w0; // waga dla nowej mikstury
-		float var0; // wariancja dla nowej mikstury
-		float minVar; // dolny prog mozliwej wariancji
-	};
-
-	MogParams mogParams = {
-		varianceThreshold,
-		backgroundRatio,
-		initialWeight,
-		initialVariance,
-		minVariance
-	};
-
-	return context.createBuffer(
-		clw::Access_ReadOnly, clw::Location_Device, 
-		sizeof(MogParams), &mogParams);
 }
 
 int main(int, char**)
@@ -187,8 +117,6 @@ int main(int, char**)
 	const int rows    = int(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
 	const int format  = int(cap.get(CV_CAP_PROP_FORMAT));
 	const int channels = 3; // !TODO
-	cl_int2 frameSize = { cols, rows };
-
 	
 	const int nmixtures = std::stoi(cfg.value("NumMixtures", "MogParameters"));
 	if(nmixtures <= 0)
@@ -212,13 +140,22 @@ int main(int, char**)
 #if 1
 
 	std::string devpick = cfg.value("Device", "General");
+	int workGroupSizeX = std::stoi(cfg.value("X", "WorkGroupSize"));
+	int workGroupSizeY = std::stoi(cfg.value("Y", "WorkGroupSize"));
+
+	if(workGroupSizeX <= 0 || workGroupSizeY <= 0)
+	{
+		std::cerr << "Parameter X or Y in WorkGroupSize is wrong, must be more than 0\n";
+		std::cin.get();
+		std::exit(-1);
+	}
 
 	// Initialize OpenCL
 	clw::Context context;
 
 	if(devpick == "pick")
 	{
-		if(!context.create(getSingleDevice()))
+		if(!context.create(clwutils::pickSingleDevice()))
 		{
 			std::cerr << "Couldn't create context, quitting\n";
 			std::exit(-1);
@@ -237,106 +174,70 @@ int main(int, char**)
 			std::exit(-1);
 		}
 	}
-
 	clw::Device device = context.devices()[0];
 	clw::CommandQueue queue = context.createCommandQueue
-		(clw::Property_ProfilingEnabled, device);
+		(clw::Property_ProfilingEnabled, device);	
 
-	clw::Kernel kernelRgbToGray = createRgb2GrayKernel(context);
-	clw::Kernel kernelMoG = createMoGKernel(context, nmixtures);
-
-	// Obraz wejsciowy kolorowy - BGR (jako bufor)
+	// Input RGB image (as a clBuffer) - actually BGR
 	int inputFrameSize = rows * cols * channels * sizeof(cl_uchar);
 	clw::Buffer inputFrame = context.createBuffer
 		(clw::Access_ReadOnly, clw::Location_Device, inputFrameSize);
 
-	// Obraz w skali szarosci
-	clw::Image2D grayFrame = context.createImage2D
-		(clw::Access_ReadWrite, clw::Location_Device,
-		 clw::ImageFormat(clw::Order_R, clw::Type_Normalized_UInt8),
-		 cols, rows);
-
-	// Obraz (w zasadzie maska) pierwszego planu
-	clw::Image2D dstFrame = context.createImage2D
-		(clw::Access_WriteOnly, clw::Location_Device,
-		 clw::ImageFormat(clw::Order_R, clw::Type_Normalized_UInt8),
-		 cols, rows);
-
-	clw::Buffer mixtureData = createMixtureDataBuffer(context, queue, cols * rows, nmixtures);
-	clw::Buffer mogParams = createMixtureParamsBuffer(context,
+	// Initialize MoG on GPU
+	MixtureOfGaussianGPU mogGPU(context, device, queue);
+	mogGPU.setMixtureParameters(200,
 		std::stof(cfg.value("VarianceThreshold", "MogParameters")),
 		std::stof(cfg.value("BackgroundRatio", "MogParameters")),
 		std::stof(cfg.value("InitialWeight", "MogParameters")),
 		std::stof(cfg.value("InitialVariance", "MogParameters")),
 		std::stof(cfg.value("MinVariance", "MogParameters")));
+	mogGPU.init(cols, rows, workGroupSizeX, workGroupSizeY, nmixtures);
 
-	int workGroupSizeX = std::stoi(cfg.value("X", "WorkGroupSize"));
-	int workGroupSizeY = std::stoi(cfg.value("Y", "WorkGroupSize"));
+	// Initialize Grayscaling on GPU
+	GrayscaleGPU grayscaleGPU(context, device, queue);
+	grayscaleGPU.init(cols, rows, workGroupSizeX, workGroupSizeY);
 
-	if(workGroupSizeX <= 0 || workGroupSizeY <= 0)
-	{
-		std::cerr << "Parameter X or Y in WorkGroupSize is wrong, must be more than 0\n";
-		std::cin.get();
-		std::exit(-1);
-	}
-
-	// Ustawienie argumentow i parametrow kerneli
-	kernelRgbToGray.setLocalWorkSize(workGroupSizeX, workGroupSizeY);
-	kernelRgbToGray.setRoundedGlobalWorkSize(cols, rows);
-	kernelRgbToGray.setArg(0, inputFrame);
-	kernelRgbToGray.setArg(1, grayFrame);
-	kernelRgbToGray.setArg(2, frameSize);
-
-	kernelMoG.setLocalWorkSize(workGroupSizeX, workGroupSizeY);
-	kernelMoG.setRoundedGlobalWorkSize(cols, rows);
-	kernelMoG.setArg(0, grayFrame);
-	kernelMoG.setArg(1, dstFrame);
-	kernelMoG.setArg(2, mixtureData);
-	kernelMoG.setArg(3, mogParams);
-	kernelMoG.setArg(4, 0.0f);
-
-	int nframe = 0;
-
+	// Main loop
 	for(;;)
 	{
-		// Calculate dynamic learning rate (if necessary)
-		++nframe;
-		float alpha = learningRate >= 0 && nframe > 1 
-			? learningRate
-			: 1.0f/std::min(nframe, defaultHistory);
-		kernelMoG.setArg(4, alpha);
-
-		cv::Mat frame, dst(rows, cols, CV_8UC1);
+		cv::Mat frame;
 		cap >> frame;
 
 		if(frame.rows == 0 || frame.cols == 0)
 			break;
 
 		clw::Event e0 = queue.asyncWriteBuffer(inputFrame, frame.data, 0, inputFrameSize);
-		clw::Event e1 = queue.asyncRunKernel(kernelRgbToGray);
-		clw::Event e2 = queue.asyncRunKernel(kernelMoG);		
-		clw::Event e3 = queue.asyncReadImage2D(dstFrame, dst.data, 0, 0, cols, rows);		
+
+		clw::Event e1 = grayscaleGPU.process(inputFrame);
+		clw::Image2D grayFrame = grayscaleGPU.output();
+
+		clw::Event e2 = mogGPU.process(grayFrame, learningRate);
+		clw::Image2D outputImage = mogGPU.output();
+
+		cv::Mat dst(rows, cols, CV_8UC1);
+		clw::Event e3 = queue.asyncReadImage2D(outputImage, dst.data, 0, 0, cols, rows);
 
 		e3.waitForFinished();
 
-		//double writeDuration = (e0.finishTime() - e0.startTime()) * 0.000001;
-		//double colorDuration = (e1.finishTime() - e1.startTime()) * 0.000001;
-		//double mogDuration = (e2.finishTime() - e2.startTime()) * 0.000001;		
-		//double readDstDuration = (e3.finishTime() - e3.startTime()) * 0.000001;
-		//
-		//std::cout 
-		//	<< "MoG: " << mogDuration << " [ms]" <<
-		//	", color: " << colorDuration << " [ms]" <<
-		//	", writeSrc: " << writeDuration << " [ms]" <<
-		//	", readDst: " << readDstDuration << " [ms]\n";
+	//	//double writeDuration = (e0.finishTime() - e0.startTime()) * 0.000001;
+	//	//double colorDuration = (e1.finishTime() - e1.startTime()) * 0.000001;
+	//	//double mogDuration = (e2.finishTime() - e2.startTime()) * 0.000001;		
+	//	//double readDstDuration = (e3.finishTime() - e3.startTime()) * 0.000001;
+	//	//
+	//	//std::cout 
+	//	//	<< "MoG: " << mogDuration << " [ms]" <<
+	//	//	", color: " << colorDuration << " [ms]" <<
+	//	//	", writeSrc: " << writeDuration << " [ms]" <<
+	//	//	", readDst: " << readDstDuration << " [ms]\n";
 
 		cv::imshow("Input", frame);
-		cv::imshow("Result", dst);		
+		cv::imshow("MoG", dst);
 
 		int key = cv::waitKey(30);
 		if(key >= 0)
 			break;
 	}
+
 #else
 	MixtureOfGaussianCPU MOG(rows, cols);
 	//cv::BackgroundSubtractorMOG MOG;

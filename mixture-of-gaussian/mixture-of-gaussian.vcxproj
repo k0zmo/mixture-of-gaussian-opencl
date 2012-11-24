@@ -98,8 +98,10 @@
     <ClCompile Include="clw\clw\Program.cpp" />
     <ClCompile Include="clw\clw\Sampler.cpp" />
     <ClCompile Include="ConfigFile.cpp" />
+    <ClCompile Include="GrayscaleGPU.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MixtureOfGaussianCPU.cpp" />
+    <ClCompile Include="MixtureOfGaussianGPU.cpp" />
     <ClCompile Include="Precompiled.cpp">
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ForcedIncludeFiles>
@@ -127,7 +129,9 @@
     <ClInclude Include="clw\clw\Sampler.h" />
     <ClInclude Include="clw\clw\StlUtils.h" />
     <ClInclude Include="ConfigFile.h" />
+    <ClInclude Include="GrayscaleGPU.h" />
     <ClInclude Include="MixtureOfGaussianCPU.h" />
+    <ClInclude Include="MixtureOfGaussianGPU.h" />
     <ClInclude Include="Precompiled.h" />
     <ClInclude Include="QPCTimer.h" />
   </ItemGroup>
