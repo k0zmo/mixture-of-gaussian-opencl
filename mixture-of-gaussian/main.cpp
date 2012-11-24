@@ -10,7 +10,6 @@
 
 #include <clw/clw.h>
 
-#include "MixtureOfGaussianCPU.h"
 #include "MixtureOfGaussianGPU.h"
 #include "GrayscaleGPU.h"
 
@@ -90,6 +89,138 @@ namespace clwutils
 	}
 }
 
+class Worker
+{
+public:
+	Worker(const clw::Context& context,
+		const clw::Device& device, 
+		const clw::CommandQueue& queue,
+		ConfigFile& cfg)
+		: context(context)
+		, device(device)
+		, queue(queue)
+		, inputFrameSize(0)
+		, mogGPU(context, device, queue)
+		, grayscaleGPU(context, device, queue)		
+		, cfg(cfg)		
+	{
+	}
+
+	void init(int stream)
+	{
+		std::string cfgVideoStream = "VideoStream";
+		cfgVideoStream += stream + '0';
+
+		std::string videoStream = cfg.value(cfgVideoStream, "General");
+
+		// Check if video is opened
+		cap.open(videoStream);
+		if(!cap.isOpened())
+		{
+			std::cerr << "Can't load " << videoStream << ", qutting\n";
+			std::cin.get();
+			exit(-1);
+		}
+
+		// Retrieve frame size
+		cols = int(cap.get(CV_CAP_PROP_FRAME_WIDTH));
+		rows = int(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
+		const int format  = int(cap.get(CV_CAP_PROP_FORMAT));
+		const int channels = 3; // !TODO
+		assert(format == CV_8U);
+
+		// CV_CAP_PROP_FORMAT zwraca tylko format danych (np. CV_8U),
+		// bez liczby kanalow
+		//cv::Mat dummy;
+		//cap.read(dummy);
+		//int channels = dummy.channels();
+		//int depth = dummy.depth();
+
+		learningRate = std::stof(cfg.value("LearningRate", "MogParameters"));
+		nmixtures = std::stoi(cfg.value("NumMixtures", "MogParameters"));
+		if(nmixtures <= 0)
+		{
+			std::cerr << "Parameter NumMixtures is wrong, must be more than 0\n";
+			std::cin.get();
+			std::exit(-1);
+		}
+
+		int workGroupSizeX = std::stoi(cfg.value("X", "WorkGroupSize"));
+		int workGroupSizeY = std::stoi(cfg.value("Y", "WorkGroupSize"));
+
+		if(workGroupSizeX <= 0 || workGroupSizeY <= 0)
+		{
+			std::cerr << "Parameter X or Y in WorkGroupSize is wrong, must be more than 0\n";
+			std::cin.get();
+			std::exit(-1);
+		}
+
+		// Input RGB image (as a clBuffer) - actually BGR
+		inputFrameSize = rows * cols * channels * sizeof(cl_uchar);
+		clFrame = context.createBuffer
+			(clw::Access_ReadOnly, clw::Location_Device, inputFrameSize);
+
+		// Output MoG Image
+		dstFrame = cv::Mat(rows, cols, CV_8UC1);
+
+		// Initialize MoG on GPU
+		mogGPU.setMixtureParameters(200,
+			std::stof(cfg.value("VarianceThreshold", "MogParameters")),
+			std::stof(cfg.value("BackgroundRatio", "MogParameters")),
+			std::stof(cfg.value("InitialWeight", "MogParameters")),
+			std::stof(cfg.value("InitialVariance", "MogParameters")),
+			std::stof(cfg.value("MinVariance", "MogParameters")));
+		mogGPU.init(cols, rows, workGroupSizeX, workGroupSizeY, nmixtures);
+
+		// Initialize Grayscaling on GPU
+		grayscaleGPU.init(cols, rows, workGroupSizeX, workGroupSizeY);
+	}
+
+	bool newFrame()
+	{
+		cap >> frame;
+		if(frame.rows == 0 || frame.cols == 0)
+			return false;
+		return true;
+	}
+
+	const cv::Mat& inputFrame() const { return frame; }
+	const cv::Mat& mogFrame() const { return dstFrame; }
+
+	clw::Event processFrame()
+	{
+		clw::Event e0 = queue.asyncWriteBuffer(clFrame, frame.data, 0, inputFrameSize);
+
+		clw::Event e1 = grayscaleGPU.process(clFrame);
+		clw::Image2D grayFrame = grayscaleGPU.output();
+
+		clw::Event e2 = mogGPU.process(grayFrame, learningRate);
+		clw::Image2D outputImage = mogGPU.output();
+
+		clw::Event e3 = queue.asyncReadImage2D(outputImage, dstFrame.data, 0, 0, cols, rows);
+
+		return e3;
+	}
+
+private:
+	clw::Context context;
+	clw::Device device;
+	clw::CommandQueue queue;
+	clw::Buffer clFrame;
+	int inputFrameSize;
+
+	MixtureOfGaussianGPU mogGPU;
+	GrayscaleGPU grayscaleGPU;
+
+	ConfigFile& cfg;
+	cv::VideoCapture cap;
+	cv::Mat frame;
+	cv::Mat dstFrame;
+	int rows, cols, channels;
+	int nmixtures;
+	float learningRate;
+};
+
 int main(int, char**)
 {
 	ConfigFile cfg;
@@ -99,56 +230,7 @@ int main(int, char**)
 		std::cin.get();
 		exit(-1);
 	}
-
-	std::string videoStream1 = cfg.value("VideoStream1", "General");
-	std::cout << "Opening video file: " << videoStream1 << std::endl;
-
-	// Open sample video
-	cv::VideoCapture cap(videoStream1);
-	if(!cap.isOpened())
-	{
-		std::cerr << "Can't load " << videoStream1 << ", qutting\n";
-		std::cin.get();
-		exit(-1);
-	}
-
-	// Retrieve frame size
-	const int cols    = int(cap.get(CV_CAP_PROP_FRAME_WIDTH));
-	const int rows    = int(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
-	const int format  = int(cap.get(CV_CAP_PROP_FORMAT));
-	const int channels = 3; // !TODO
-	
-	const int nmixtures = std::stoi(cfg.value("NumMixtures", "MogParameters"));
-	if(nmixtures <= 0)
-	{
-		std::cerr << "Parameter NumMixtures is wrong, must be more than 0\n";
-		std::cin.get();
-		std::exit(-1);
-	}
-
-	assert(format == CV_8U);
-
-	// CV_CAP_PROP_FORMAT zwraca tylko format danych (np. CV_8U),
-	// bez liczby kanalow
-	//cv::Mat dummy;
-	//cap.read(dummy);
-	//int channels = dummy.channels();
-	//int depth = dummy.depth();
-
-	float learningRate = std::stof(cfg.value("LearningRate", "MogParameters"));
-
-#if 1
-
 	std::string devpick = cfg.value("Device", "General");
-	int workGroupSizeX = std::stoi(cfg.value("X", "WorkGroupSize"));
-	int workGroupSizeY = std::stoi(cfg.value("Y", "WorkGroupSize"));
-
-	if(workGroupSizeX <= 0 || workGroupSizeY <= 0)
-	{
-		std::cerr << "Parameter X or Y in WorkGroupSize is wrong, must be more than 0\n";
-		std::cin.get();
-		std::exit(-1);
-	}
 
 	// Initialize OpenCL
 	clw::Context context;
@@ -176,116 +258,61 @@ int main(int, char**)
 	}
 	clw::Device device = context.devices()[0];
 	clw::CommandQueue queue = context.createCommandQueue
-		(clw::Property_ProfilingEnabled, device);	
+		(clw::Property_ProfilingEnabled, device);
 
-	// Input RGB image (as a clBuffer) - actually BGR
-	int inputFrameSize = rows * cols * channels * sizeof(cl_uchar);
-	clw::Buffer inputFrame = context.createBuffer
-		(clw::Access_ReadOnly, clw::Location_Device, inputFrameSize);
+	Worker w1(context, device, queue, cfg);
+	Worker w2(context, device, queue, cfg);
+	Worker w3(context, device, queue, cfg);
 
-	// Initialize MoG on GPU
-	MixtureOfGaussianGPU mogGPU(context, device, queue);
-	mogGPU.setMixtureParameters(200,
-		std::stof(cfg.value("VarianceThreshold", "MogParameters")),
-		std::stof(cfg.value("BackgroundRatio", "MogParameters")),
-		std::stof(cfg.value("InitialWeight", "MogParameters")),
-		std::stof(cfg.value("InitialVariance", "MogParameters")),
-		std::stof(cfg.value("MinVariance", "MogParameters")));
-	mogGPU.init(cols, rows, workGroupSizeX, workGroupSizeY, nmixtures);
+	w1.init(1);
+	w2.init(2);
+	w3.init(3);
 
-	// Initialize Grayscaling on GPU
-	GrayscaleGPU grayscaleGPU(context, device, queue);
-	grayscaleGPU.init(cols, rows, workGroupSizeX, workGroupSizeY);
-
-	// Main loop
-	for(;;)
-	{
-		cv::Mat frame;
-		cap >> frame;
-
-		if(frame.rows == 0 || frame.cols == 0)
-			break;
-
-		clw::Event e0 = queue.asyncWriteBuffer(inputFrame, frame.data, 0, inputFrameSize);
-
-		clw::Event e1 = grayscaleGPU.process(inputFrame);
-		clw::Image2D grayFrame = grayscaleGPU.output();
-
-		clw::Event e2 = mogGPU.process(grayFrame, learningRate);
-		clw::Image2D outputImage = mogGPU.output();
-
-		cv::Mat dst(rows, cols, CV_8UC1);
-		clw::Event e3 = queue.asyncReadImage2D(outputImage, dst.data, 0, 0, cols, rows);
-
-		e3.waitForFinished();
-
-	//	//double writeDuration = (e0.finishTime() - e0.startTime()) * 0.000001;
-	//	//double colorDuration = (e1.finishTime() - e1.startTime()) * 0.000001;
-	//	//double mogDuration = (e2.finishTime() - e2.startTime()) * 0.000001;		
-	//	//double readDstDuration = (e3.finishTime() - e3.startTime()) * 0.000001;
-	//	//
-	//	//std::cout 
-	//	//	<< "MoG: " << mogDuration << " [ms]" <<
-	//	//	", color: " << colorDuration << " [ms]" <<
-	//	//	", writeSrc: " << writeDuration << " [ms]" <<
-	//	//	", readDst: " << readDstDuration << " [ms]\n";
-
-		cv::imshow("Input", frame);
-		cv::imshow("MoG", dst);
-
-		int key = cv::waitKey(30);
-		if(key >= 0)
-			break;
-	}
-
-#else
-	MixtureOfGaussianCPU MOG(rows, cols);
-	//cv::BackgroundSubtractorMOG MOG;
 	QPCTimer timer;
 
 	for(;;)
 	{
+		bool f1 = w1.newFrame();
+		bool f2 = w2.newFrame();
+		bool f3 = w3.newFrame();
 
-		// Get a new frame from camera
-		cv::Mat frame;
-		cap >> frame; 
-
-		if(frame.rows == 0 || frame.cols == 0)
+		if(!f1 && !f2 && !f3)
 			break;
 
-		// Convert it to grayscale
-		cvtColor(frame, frame, CV_BGR2GRAY);
-
-		// Estimate the background
 		double start = timer.currentTime();
 
-		cv::Mat	frameMask;
-		MOG(frame, frameMask, learningRate);
+		if(f1)
+		{
+			w1.processFrame();
+			queue.flush();
+		}
+		if(f2)
+		{
+			w2.processFrame();
+			queue.flush();
+		}
+		if(f3)
+		{
+			w3.processFrame();
+			queue.flush();
+		}
+		queue.finish();
 
 		double stop = timer.currentTime();
 
-		std::cout << (stop - start) * 1000.0 << std::endl;
+		std::cout << "Total time: " << (stop - start) * 1000 << " ms\n";
 
-		//cv::Canny(frameMask, frameMask, 3, 9);
+		//cv::imshow("Input1", w1.inputFrame());
+		cv::imshow("MoG1", w1.mogFrame());
 
-		//for(int y = 0; y < frameMask.rows; ++y)
-		//{
-		//	uchar* ptr = frameMask.ptr<uchar>(y);
-		//	uchar* src = frame.ptr<uchar>(y);
-		//	for(int x = 0; x < frameMask.cols; ++x, ++ptr, ++src)
-		//	{
-		//		if(ptr[0] > 0)
-		//			ptr[0] = src[0];
-		//	}
-		//}
+		//cv::imshow("Input2", w2.inputFrame());
+		cv::imshow("MoG2", w2.mogFrame());
 
-		// Show them
-		cv::imshow("Mixture of Guassian", frameMask);
-		cv::imshow("Original video", frame);
+		//cv::imshow("Input2", w2.inputFrame());
+		cv::imshow("MoG3", w3.mogFrame());
 
 		int key = cv::waitKey(30);
 		if(key >= 0)
 			break;
 	}
-#endif
 }
