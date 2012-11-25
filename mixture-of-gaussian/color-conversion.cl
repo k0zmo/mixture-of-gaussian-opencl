@@ -64,7 +64,7 @@ __kernel void rgb2gray(
 	float g = convert_float(src[3*gid1 + 1]);
 	float b = convert_float(src[3*gid1 + 2]);
 	float4 rgba = { r, g, b, 0 };
-	float gray = dot(grayscale_scaled, rgba / 255.0f);
+	float gray = dot(grayscale, rgba / 255.0f);
 #else
 	uchar3 rgb = vload3(gid1, src);
 	float3 rgba = convert_float3(rgb);
