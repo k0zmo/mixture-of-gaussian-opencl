@@ -107,13 +107,8 @@ public:
 	{
 	}
 
-	void init(int stream)
+	void init(const std::string& videoStream)
 	{
-		std::string cfgVideoStream = "VideoStream";
-		cfgVideoStream += stream + '0';
-
-		std::string videoStream = cfg.value(cfgVideoStream, "General");
-
 		// Check if video is opened
 		cap.open(videoStream);
 		if(!cap.isOpened())
@@ -267,13 +262,24 @@ int main(int, char**)
 
 	int numVideoStreams = 0;
 
+	std::vector<bool> finish;
+	std::vector<std::unique_ptr<Worker>> workers;
+
 	for(int streamId = 1; streamId <= 5; ++streamId)
 	{
 		std::string cfgVideoStream = "VideoStream";
 		cfgVideoStream += streamId + '0';
+		std::string videoStream = cfg.value(cfgVideoStream, "General");
 
-		if(!cfg.value(cfgVideoStream, "General").empty())
+		if(!videoStream.empty())
+		{
 			++numVideoStreams;
+			auto worker = std::unique_ptr<Worker>(new Worker(context, device, queue, cfg));
+			worker->init(videoStream);
+
+			workers.emplace_back(std::move(worker));
+			finish.push_back(false);
+		}
 	}
 
 	if(numVideoStreams < 1)
@@ -281,16 +287,6 @@ int main(int, char**)
 		std::wcout << "videoStream is not defined at least once\n";
 		std::cin.get();
 		std::exit(-1);
-	}
-
-	std::vector<bool> finish(numVideoStreams);
-	std::vector<std::unique_ptr<Worker>> workers;
-
-	for(int i = 0; i < numVideoStreams; ++i)
-	{
-		auto worker = std::unique_ptr<Worker>(new Worker(context, device, queue, cfg));
-		worker->init(i + 1);
-		workers.emplace_back(std::move(worker));
 	}
 
 	QPCTimer timer;
