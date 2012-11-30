@@ -4,6 +4,7 @@
 #include <opencv2/video/video.hpp>
 
 #include <iostream>
+#include <memory>
 
 #include "QPCTimer.h"
 #include "ConfigFile.h"
@@ -219,6 +220,10 @@ private:
 	int rows, cols, channels;
 	int nmixtures;
 	float learningRate;
+
+private:
+	Worker(const Worker&);
+	Worker& operator=(const Worker&);
 };
 
 int main(int, char**)
@@ -260,41 +265,56 @@ int main(int, char**)
 	clw::CommandQueue queue = context.createCommandQueue
 		(clw::Property_ProfilingEnabled, device);
 
-	Worker w1(context, device, queue, cfg);
-	Worker w2(context, device, queue, cfg);
-	Worker w3(context, device, queue, cfg);
+	int numVideoStreams = 0;
 
-	w1.init(1);
-	w2.init(2);
-	w3.init(3);
+	for(int streamId = 1; streamId <= 5; ++streamId)
+	{
+		std::string cfgVideoStream = "VideoStream";
+		cfgVideoStream += streamId + '0';
+
+		if(!cfg.value(cfgVideoStream, "General").empty())
+			++numVideoStreams;
+	}
+
+	if(numVideoStreams < 1)
+	{
+		std::wcout << "videoStream is not defined at least once\n";
+		std::cin.get();
+		std::exit(-1);
+	}
+
+	std::vector<bool> finish(numVideoStreams);
+	std::vector<std::unique_ptr<Worker>> workers;
+
+	for(int i = 0; i < numVideoStreams; ++i)
+	{
+		auto worker = std::unique_ptr<Worker>(new Worker(context, device, queue, cfg));
+		worker->init(i + 1);
+		workers.emplace_back(std::move(worker));
+	}
 
 	QPCTimer timer;
 
 	for(;;)
 	{
-		bool f1 = w1.newFrame();
-		bool f2 = w2.newFrame();
-		bool f3 = w3.newFrame();
+		for(int i = 0; i < numVideoStreams; ++i)
+			finish[i] = workers[i]->newFrame();
 
-		if(!f1 && !f2 && !f3)
+		bool allFinish = false;
+		for(int i = 0; i < numVideoStreams; ++i)
+			allFinish = allFinish || finish[i];
+		if(!allFinish)
 			break;
 
 		double start = timer.currentTime();
 
-		if(f1)
+		for(int i = 0; i < numVideoStreams; ++i)
 		{
-			w1.processFrame();
-			queue.flush();
-		}
-		if(f2)
-		{
-			w2.processFrame();
-			queue.flush();
-		}
-		if(f3)
-		{
-			w3.processFrame();
-			queue.flush();
+			if(finish[i])
+			{
+				workers[i]->processFrame();
+				queue.flush();
+			}
 		}
 		queue.finish();
 
@@ -302,14 +322,12 @@ int main(int, char**)
 
 		std::cout << "Total time: " << (stop - start) * 1000 << " ms\n";
 
-		//cv::imshow("Input1", w1.inputFrame());
-		cv::imshow("MoG1", w1.mogFrame());
-
-		//cv::imshow("Input2", w2.inputFrame());
-		cv::imshow("MoG2", w2.mogFrame());
-
-		//cv::imshow("Input2", w2.inputFrame());
-		cv::imshow("MoG3", w3.mogFrame());
+		for(int i = 0; i < numVideoStreams; ++i)
+		{
+			std::string title("MoG");
+			title += ('0' + i + 1);
+			cv::imshow(title, workers[i]->mogFrame());
+		}
 
 		int key = cv::waitKey(30);
 		if(key >= 0)

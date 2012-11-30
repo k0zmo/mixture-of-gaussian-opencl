@@ -140,14 +140,14 @@ string ConfigFile::value(const string& key, const string& section)
 	auto seci = mSettings.find(section);
 	if(seci == mSettings.end())
 	{
-		return string("Section not found: ") + section;
+		return "";
 	}
 	else
 	{
 		auto i = seci->second->find(key);
 		if(i == seci->second->end())
 		{
-			return string("Key not found: ") + key;
+			return "";
 		}
 		else
 		{
