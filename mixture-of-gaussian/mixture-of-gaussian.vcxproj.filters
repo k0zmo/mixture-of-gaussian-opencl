@@ -56,9 +56,6 @@
     <ClCompile Include="clw\clw\MemoryObject.cpp">
       <Filter>clw</Filter>
     </ClCompile>
-    <ClCompile Include="clw\clw\NDRange.cpp">
-      <Filter>clw</Filter>
-    </ClCompile>
     <ClCompile Include="clw\clw\Platform.cpp">
       <Filter>clw</Filter>
     </ClCompile>
@@ -76,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="GrayscaleGPU.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="clw\clw\Grid.cpp">
+      <Filter>clw</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -115,9 +115,6 @@
     <ClInclude Include="clw\clw\MemoryObject.h">
       <Filter>clw</Filter>
     </ClInclude>
-    <ClInclude Include="clw\clw\NDRange.h">
-      <Filter>clw</Filter>
-    </ClInclude>
     <ClInclude Include="clw\clw\Platform.h">
       <Filter>clw</Filter>
     </ClInclude>
@@ -141,6 +138,9 @@
     </ClInclude>
     <ClInclude Include="GrayscaleGPU.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="clw\clw\Grid.h">
+      <Filter>clw</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
