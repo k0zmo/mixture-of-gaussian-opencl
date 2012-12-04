@@ -107,38 +107,14 @@ public:
 	{
 	}
 
-	void init(const std::string& videoStream)
+	bool init(int width, int height)
 	{
-		// Check if video is opened
-		cap.open(videoStream);
-		if(!cap.isOpened())
-		{
-			std::cerr << "Can't load " << videoStream << ", qutting\n";
-			std::cin.get();
-			exit(-1);
-		}
-
-		// Retrieve frame size
-		cols = int(cap.get(CV_CAP_PROP_FRAME_WIDTH));
-		rows = int(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
-		const int format  = int(cap.get(CV_CAP_PROP_FORMAT));
-		const int channels = 3; // !TODO
-		assert(format == CV_8U);
-
-		// CV_CAP_PROP_FORMAT zwraca tylko format danych (np. CV_8U),
-		// bez liczby kanalow
-		//cv::Mat dummy;
-		//cap.read(dummy);
-		//int channels = dummy.channels();
-		//int depth = dummy.depth();
-
 		learningRate = std::stof(cfg.value("LearningRate", "MogParameters"));
-		nmixtures = std::stoi(cfg.value("NumMixtures", "MogParameters"));
+		const int nmixtures = std::stoi(cfg.value("NumMixtures", "MogParameters"));
 		if(nmixtures <= 0)
 		{
 			std::cerr << "Parameter NumMixtures is wrong, must be more than 0\n";
-			std::cin.get();
-			std::exit(-1);
+			return false;
 		}
 
 		int workGroupSizeX = std::stoi(cfg.value("X", "WorkGroupSize"));
@@ -147,17 +123,14 @@ public:
 		if(workGroupSizeX <= 0 || workGroupSizeY <= 0)
 		{
 			std::cerr << "Parameter X or Y in WorkGroupSize is wrong, must be more than 0\n";
-			std::cin.get();
-			std::exit(-1);
+			return false;
 		}
 
 		// Input RGB image (as a clBuffer) - actually BGR
-		inputFrameSize = rows * cols * channels * sizeof(cl_uchar);
+		const int channels = 3;
+		inputFrameSize = width * height * channels * sizeof(cl_uchar);
 		clFrame = context.createBuffer
 			(clw::Access_ReadOnly, clw::Location_Device, inputFrameSize);
-
-		// Output MoG Image
-		dstFrame = cv::Mat(rows, cols, CV_8UC1);
 
 		// Initialize MoG on GPU
 		mogGPU.setMixtureParameters(200,
@@ -166,35 +139,21 @@ public:
 			std::stof(cfg.value("InitialWeight", "MogParameters")),
 			std::stof(cfg.value("InitialVariance", "MogParameters")),
 			std::stof(cfg.value("MinVariance", "MogParameters")));
-		mogGPU.init(cols, rows, workGroupSizeX, workGroupSizeY, nmixtures);
+		mogGPU.init(width, height, workGroupSizeX, workGroupSizeY, nmixtures);
 
 		// Initialize Grayscaling on GPU
-		grayscaleGPU.init(cols, rows, workGroupSizeX, workGroupSizeY);
-	}
+		grayscaleGPU.init(width, height, workGroupSizeX, workGroupSizeY);
 
-	bool newFrame()
-	{
-		cap >> frame;
-		if(frame.rows == 0 || frame.cols == 0)
-			return false;
 		return true;
 	}
 
-	const cv::Mat& inputFrame() const { return frame; }
-	const cv::Mat& mogFrame() const { return dstFrame; }
 
-	clw::Event processFrame()
+	clw::Event processFrame(const cv::Mat& frame, cv::Mat& dstFrame)
 	{
 		clw::Event e0 = queue.asyncWriteBuffer(clFrame, frame.data, 0, inputFrameSize);
-
 		clw::Event e1 = grayscaleGPU.process(clFrame);
-		clw::Image2D grayFrame = grayscaleGPU.output();
-
-		clw::Event e2 = mogGPU.process(grayFrame, learningRate);
-		clw::Image2D outputImage = mogGPU.output();
-
-		clw::Event e3 = queue.asyncReadImage2D(outputImage, dstFrame.data, 0, 0, cols, rows);
-
+		clw::Event e2 = mogGPU.process(grayscaleGPU.output(), learningRate);
+		clw::Event e3 = queue.asyncReadImage2D(mogGPU.output(), dstFrame.data, 0, 0, dstFrame.cols, dstFrame.rows);
 		return e3;
 	}
 
@@ -209,17 +168,70 @@ private:
 	GrayscaleGPU grayscaleGPU;
 
 	ConfigFile& cfg;
-	cv::VideoCapture cap;
-	cv::Mat frame;
-	cv::Mat dstFrame;
-	int rows, cols, channels;
-	int nmixtures;
 	float learningRate;
 
 private:
 	Worker(const Worker&);
 	Worker& operator=(const Worker&);
 };
+
+struct WorkerData
+{
+	cv::VideoCapture cap;
+	cv::Mat srcFrame;
+	cv::Mat dstFrame;
+
+	bool init(const std::string& videoStream)
+	{
+		// Check if video is opened
+		cap.open(videoStream);
+		if(!cap.isOpened())
+		{
+			std::cerr << "Can't load " << videoStream << ", qutting\n";
+			return false;
+		}
+
+		// Retrieve frame size
+		const int width = int(cap.get(CV_CAP_PROP_FRAME_WIDTH));
+		const int height = int(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
+		const int format  = int(cap.get(CV_CAP_PROP_FORMAT));
+		assert(format == CV_8U);
+
+		// Output MoG Image
+		dstFrame = cv::Mat(height, width, CV_8UC1);
+		return true;
+	}
+
+	int width() { return int(cap.get(CV_CAP_PROP_FRAME_WIDTH)); }
+	int height() { return int(cap.get(CV_CAP_PROP_FRAME_HEIGHT)); }
+
+	bool grabFrame()
+	{
+		cap >> srcFrame;
+		if(srcFrame.rows == 0 || srcFrame.cols == 0)
+			return false;
+		return true;
+	}
+};
+
+namespace std
+{
+	template<class _Ty> inline
+	unique_ptr<_Ty> make_unique()
+	{	
+		_Ty* _Rx = new _Ty();
+		unique_ptr<_Ty> _Ret(_Rx);
+		return _Ret;
+	}
+
+	template<class _Ty, class _Arg0, class _Arg1, class _Arg2, class _Arg3> inline
+	unique_ptr<_Ty> make_unique(_Arg0&& _Ax0, _Arg1&& _Ax1, _Arg2&& _Ax2, _Arg3&& _Ax3)
+	{	
+		_Ty* _Rx = new _Ty(std::forward<_Arg0>(_Ax0), std::forward<_Arg1>(_Ax1), std::forward<_Arg2>(_Ax2), std::forward<_Arg3>(_Ax3));
+		unique_ptr<_Ty> _Ret(_Rx);
+		return _Ret;
+	}
+}
 
 int main(int, char**)
 {
@@ -264,6 +276,7 @@ int main(int, char**)
 
 	std::vector<bool> finish;
 	std::vector<std::unique_ptr<Worker>> workers;
+	std::vector<std::unique_ptr<WorkerData>> workersData;
 
 	for(int streamId = 1; streamId <= 5; ++streamId)
 	{
@@ -274,10 +287,16 @@ int main(int, char**)
 		if(!videoStream.empty())
 		{
 			++numVideoStreams;
-			auto worker = std::unique_ptr<Worker>(new Worker(context, device, queue, cfg));
-			worker->init(videoStream);
+			auto workerData = std::make_unique<WorkerData>();//std::unique_ptr<WorkerData>(new WorkerData);
+			if(!workerData->init(videoStream))
+				continue;
+
+			auto worker = std::make_unique<Worker>(context ,device, queue, cfg);
+			if(!worker->init(workerData->width(), workerData->height()))
+				continue;
 
 			workers.emplace_back(std::move(worker));
+			workersData.emplace_back(std::move(workerData));
 			finish.push_back(false);
 		}
 	}
@@ -293,8 +312,9 @@ int main(int, char**)
 
 	for(;;)
 	{
+		// Grab a new frame
 		for(int i = 0; i < numVideoStreams; ++i)
-			finish[i] = workers[i]->newFrame();
+			finish[i] = workersData[i]->grabFrame();
 
 		bool allFinish = false;
 		for(int i = 0; i < numVideoStreams; ++i)
@@ -308,7 +328,7 @@ int main(int, char**)
 		{
 			if(finish[i])
 			{
-				workers[i]->processFrame();
+				workers[i]->processFrame(workersData[i]->srcFrame, workersData[i]->dstFrame);
 				queue.flush();
 			}
 		}
@@ -322,7 +342,7 @@ int main(int, char**)
 		{
 			std::string title("MoG");
 			title += ('0' + i + 1);
-			cv::imshow(title, workers[i]->mogFrame());
+			cv::imshow(title, workersData[i]->dstFrame);
 		}
 
 		int key = cv::waitKey(30);
