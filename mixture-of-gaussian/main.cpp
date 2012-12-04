@@ -277,6 +277,7 @@ int main(int, char**)
 	std::vector<bool> finish;
 	std::vector<std::unique_ptr<Worker>> workers;
 	std::vector<std::unique_ptr<WorkerData>> workersData;
+	std::vector<std::string> titles;
 
 	for(int streamId = 1; streamId <= 5; ++streamId)
 	{
@@ -298,6 +299,8 @@ int main(int, char**)
 			workers.emplace_back(std::move(worker));
 			workersData.emplace_back(std::move(workerData));
 			finish.push_back(false);
+
+			titles.emplace_back(std::move(videoStream));
 		}
 	}
 
@@ -340,9 +343,7 @@ int main(int, char**)
 
 		for(int i = 0; i < numVideoStreams; ++i)
 		{
-			std::string title("MoG");
-			title += ('0' + i + 1);
-			cv::imshow(title, workersData[i]->dstFrame);
+			cv::imshow(titles[i], workersData[i]->dstFrame);
 		}
 
 		int key = cv::waitKey(30);
