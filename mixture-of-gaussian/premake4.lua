@@ -6,19 +6,24 @@ end
 
 solution "mixture-of-gaussian"
 	configurations { "Debug", "Release" }
-    project "mixture-of-gaussian"
-    	language "C++"
+	project "mixture-of-gaussian"
+		language "C++"
 	    location "proj"
-    	kind "ConsoleApp"
-    	includedirs "clw"
+		kind "ConsoleApp"
+		includedirs "clw"
 		defines "CL_USE_DEPRECATED_OPENCL_1_1_APIS"	
-    	objdir "obj"
+		objdir "obj"
 		targetdir "."
-    	
-    	files {
-    		"clw/clw/*.cpp", "clw/clw/*.h",
-    		"main.cpp", "MixtureOfGaussianCPU.*", "QPCTimer.*", "ConfigFile.*"
-    	}
+		
+		files {
+			"clw/clw/*.cpp", "clw/clw/*.h",
+			"main.cpp", 
+			"MixtureOfGaussianCPU.*",
+			"MixtureOfGaussianGPU.*",
+			"GrayscaleGPU.*",
+			"QPCTimer.*",
+			"ConfigFile.*"
+		}
 			
 		links {
 			"opencv_core", "opencv_imgproc", "opencv_highgui",
@@ -28,11 +33,11 @@ solution "mixture-of-gaussian"
 	configuration "Debug"
 		targetsuffix "_d"
 		defines { "DEBUG", "_DEBUG", }
-		flags "Symbols"
+		flags { "Symbols", "ExtraWarnings" }
 	
 	configuration "Release"
 		defines "NDEBUG"	
-		flags { "OptimizeSpeed", "NoEditAndContinue", "NoFramePointer" }
+		flags { "OptimizeSpeed", "NoEditAndContinue", "NoFramePointer", "ExtraWarnings" }
 		
 	configuration { "linux", "gmake" }
-		buildoptions { "-std=c++0x", "-fPIC" }
+		buildoptions { "-std=c++11", "-fPIC" }

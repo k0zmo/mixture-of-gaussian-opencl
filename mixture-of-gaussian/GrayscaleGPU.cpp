@@ -1,5 +1,7 @@
 #include "GrayscaleGPU.h"
 
+#include <iostream>
+
 GrayscaleGPU::GrayscaleGPU(const clw::Context& context,
 						   const clw::Device& device,
 						   const clw::CommandQueue& queue)

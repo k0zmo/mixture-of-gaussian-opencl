@@ -1,5 +1,8 @@
 #include "MixtureOfGaussianGPU.h"
 
+#include <opencv2/core/core.hpp>
+#include <iostream>
+
 MixtureOfGaussianGPU::MixtureOfGaussianGPU(const clw::Context& context,
 										   const clw::Device& device, 
 										   const clw::CommandQueue& queue)
