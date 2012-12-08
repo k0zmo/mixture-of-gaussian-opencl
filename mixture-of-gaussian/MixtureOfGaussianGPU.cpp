@@ -2,6 +2,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <iostream>
+#include <sstream>
 
 MixtureOfGaussianGPU::MixtureOfGaussianGPU(const clw::Context& context,
 										   const clw::Device& device, 
@@ -91,8 +92,9 @@ clw::Event MixtureOfGaussianGPU::process(clw::Image2D& inputGrayFrame,
 
 void MixtureOfGaussianGPU::createMoGKernel(int nmixtures)
 {
-	std::string buildOptions = "-Dmixtures=";
-	buildOptions += nmixtures + '0';
+	std::ostringstream ss;
+	ss << "-Dnmixtures=" << nmixtures;
+	std::string buildOptions = ss.str();
 
 	clw::Program progMog = context.createProgramFromSourceFile("mixture-of-gaussian.cl");
 	if(!progMog.build(buildOptions))

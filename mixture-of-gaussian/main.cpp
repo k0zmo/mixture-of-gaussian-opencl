@@ -313,6 +313,9 @@ int main(int, char**)
 
 	QPCTimer timer;
 
+	int frameInterval = std::stoi(cfg.value("FrameInterval", "General"));
+	frameInterval = std::min(std::max(frameInterval, 1), 100);
+
 	for(;;)
 	{
 		// Grab a new frame
@@ -339,14 +342,16 @@ int main(int, char**)
 
 		double stop = timer.currentTime();
 
-		std::cout << "Total time: " << (stop - start) * 1000 << " ms\n";
+		std::cout << "Total time: " << (stop - start) * 1000.0 << " ms\n";
 
 		for(int i = 0; i < numVideoStreams; ++i)
 		{
 			cv::imshow(titles[i], workersData[i]->dstFrame);
 		}
 
-		int key = cv::waitKey(30);
+		int totalTime = int(stop - start);
+
+		int key = cv::waitKey(std::min(frameInterval, frameInterval - int((stop - start) * 1000)));
 		if(key >= 0)
 			break;
 	}
