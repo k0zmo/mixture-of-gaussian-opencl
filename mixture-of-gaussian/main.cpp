@@ -183,8 +183,26 @@ struct WorkerData
 
 	bool init(const std::string& videoStream)
 	{
+		size_t idx;
+		int device;
+
+		try
+		{
+			device = std::stoi(videoStream, &idx);
+			if(idx < videoStream.length())
+				device = 1;
+		}
+		catch(std::invalid_argument&)
+		{
+			device = -1;
+		}
+
 		// Check if video is opened
-		cap.open(videoStream);
+		if(device != -1)
+			cap.open(device);
+		else
+			cap.open(videoStream);
+
 		if(!cap.isOpened())
 		{
 			std::cerr << "Can't load " << videoStream << ", qutting\n";
@@ -287,7 +305,6 @@ int main(int, char**)
 
 		if(!videoStream.empty())
 		{
-			++numVideoStreams;
 			auto workerData = std::make_unique<WorkerData>();//std::unique_ptr<WorkerData>(new WorkerData);
 			if(!workerData->init(videoStream))
 				continue;
@@ -298,15 +315,16 @@ int main(int, char**)
 
 			workers.emplace_back(std::move(worker));
 			workersData.emplace_back(std::move(workerData));
+			titles.emplace_back(std::move(videoStream));
 			finish.push_back(false);
 
-			titles.emplace_back(std::move(videoStream));
+			++numVideoStreams;
 		}
 	}
 
 	if(numVideoStreams < 1)
 	{
-		std::wcout << "videoStream is not defined at least once\n";
+		std::wcout << "No video stream to process\n";
 		std::cin.get();
 		std::exit(-1);
 	}
