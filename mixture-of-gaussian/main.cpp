@@ -333,6 +333,7 @@ int main(int, char**)
 
 	int frameInterval = std::stoi(cfg.value("FrameInterval", "General"));
 	frameInterval = std::min(std::max(frameInterval, 1), 100);
+	bool showSourceFrame = cfg.value("ShowSourceFrame", "General") == "yes";
 
 	for(;;)
 	{
@@ -365,6 +366,8 @@ int main(int, char**)
 		for(int i = 0; i < numVideoStreams; ++i)
 		{
 			cv::imshow(titles[i], workersData[i]->dstFrame);
+			if(showSourceFrame)
+				cv::imshow(titles[i] + " source", workersData[i]->srcFrame);
 		}
 
 		int totalTime = int(stop - start);
