@@ -372,7 +372,7 @@ int main(int, char**)
 
 		int totalTime = int(stop - start);
 
-		int key = cv::waitKey(std::min(frameInterval, frameInterval - int((stop - start) * 1000)));
+		int key = cv::waitKey(std::max(frameInterval, int((stop - start) * 1000)));
 		if(key >= 0)
 			break;
 	}
