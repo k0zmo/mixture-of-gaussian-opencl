@@ -3,6 +3,9 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <string>
 
+// Uncomment this to support sapera cameras
+//#define SAPERA_SUPPORT
+
 class FrameGrabber
 {
 public:
@@ -36,13 +39,34 @@ private:
 		format;
 };
 
-/*
+// Make sure it isn't included in Linux builds
+#if defined(SAPERA_SUPPORT) && defined(_WIN32)
 
-class SaperaFrameGrabber : FrameGrabber
+// Forward declarations
+class SapAcquisition;
+class SapBuffer;
+class SapAcqToBuf;
+
+class SaperaFrameGrabber : public FrameGrabber
 {
 public:
+	SaperaFrameGrabber();
+	virtual ~SaperaFrameGrabber();
 
+	virtual bool init(const std::string& stream) override;
+	virtual void deinit() override;
+	virtual cv::Mat grab(bool* success) override;
+	virtual int frameWidth() const override;
+	virtual int frameHeight() const override;
+	virtual int frameFormat() const override;
+	virtual bool needBayer() const override;
+
+private:
+	SapAcquisition* acq;
+	SapBuffer* buffer;
+	SapAcqToBuf* xfer;
+	IplImage* image; // Can't really use cv::Mat
+	char* dummyImageData;
 };
 
-*/
-
+#endif

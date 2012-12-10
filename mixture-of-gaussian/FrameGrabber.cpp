@@ -75,3 +75,172 @@ int OpenCvFrameGrabber::frameFormat() const
 { return format; }
 bool OpenCvFrameGrabber::needBayer() const
 { return false; }
+
+#if defined(SAPERA_SUPPORT)
+#	include "SapClassBasic.h"
+#	ifdef _DEBUG
+#		pragma comment(lib, "SapClassBasicD.lib")
+#	else
+#		pragma comment(lib, "SapClassBasic.lib")
+#	endif
+
+SaperaFrameGrabber::SaperaFrameGrabber()
+	: acq(nullptr)
+	, buffer(nullptr)
+	, xfer(nullptr)
+	, image(nullptr)
+{
+}
+
+SaperaFrameGrabber::~SaperaFrameGrabber()
+{
+	deinit();
+}
+
+bool SaperaFrameGrabber::init(const std::string& stream)
+{
+	SapLocation loc("X64-CL_iPro_1", 0);
+	const char* cfg_file = stream.c_str();
+
+	acq = new SapAcquisition(loc, cfg_file);
+	buffer = new SapBuffer(1, acq);
+	xfer = new SapAcqToBuf(acq, buffer);
+
+	// Crate acquisition object
+	if(acq && !acq->Create())
+	{
+		std::cout << "Create Acq error.\n";
+		deinit();
+		return false;
+	}
+
+	// Create buffer object
+	if(buffer && !buffer->Create())
+	{
+		std::cout << "Create Buffers error.\n";
+		deinit();
+		return false;
+	}
+
+	// Create transfer object
+	if (xfer && !xfer->Create())
+	{
+		std::cout << "Create Xfer error.\n";
+		deinit();
+		return false;
+	}
+
+	// Not sure if that's ok
+	image = cvCreateImage(cvSize(buffer->GetWidth(), buffer->GetHeight()), IPL_DEPTH_16U, 1);
+	dummyImageData = image->imageData;
+	return true;
+}
+
+void SaperaFrameGrabber::deinit()
+{
+	// Close camera
+	if(xfer)
+	{
+		xfer->Freeze();
+		xfer->Wait(5000);
+	}
+
+	// Destroy transfer object
+	if (xfer && !xfer->Destroy()) 
+		return;
+
+	// Destroy buffer object
+	if (buffer && !buffer->Destroy())
+		return;
+
+	// Destroy acquisition object
+	if (acq && !acq->Destroy()) 
+		return;
+
+	// Delete all objects
+	if (xfer) delete xfer;
+	if (buffer) delete buffer; 
+	if (acq) delete acq; 
+
+	image->imageData = dummyImageData;
+	cvReleaseImage(&image);
+
+	acq = nullptr;
+	buffer = nullptr;
+	xfer = nullptr;
+	image = nullptr;
+}
+
+cv::Mat SaperaFrameGrabber::grab(bool* success)
+{
+	if(!xfer || !buffer)
+	{
+		if(success)
+			*success = false;
+		return cv::Mat();
+	}
+
+	// Grab a frame
+	bool ret = xfer->Snap() > 0;
+	ret &= xfer->Wait(1000) > 0;
+
+	void* data;
+	ret &= buffer->GetAddress(&data) > 0;
+	image->imageData = static_cast<char*>(data);
+	cv::Mat frame(image);
+
+	if(success)
+		*success = ret;
+
+	if(frame.depth() != CV_8U)
+	{
+		cv::Mat tmp = frame.clone();
+		tmp.convertTo(frame, CV_8UC1, 0.0625);
+	}
+
+	//// Nie wiem czy to do konca jest poprawne
+	//if(frame.channels() != 1)
+	//{
+	//	int code = (frame.channels() == 3)
+	//		? CV_BGR2GRAY
+	//		: CV_BGRA2GRAY;
+	//	cvtColor(frame, frame, code);
+	//}
+
+	return frame;
+}
+
+int SaperaFrameGrabber::frameWidth() const
+{
+	if(buffer)
+		return buffer->GetWidth();
+	return 0;
+}
+
+int SaperaFrameGrabber::frameHeight() const
+{
+	if(buffer)
+		return buffer->GetHeight();
+	return 0;
+}
+
+int SaperaFrameGrabber::frameFormat() const
+{
+	if(buffer)
+		return int(buffer->GetFormat());
+	return 0;
+}
+
+bool SaperaFrameGrabber::needBayer() const
+{
+	// NOT yet tested
+	if(buffer)
+	{
+		if(buffer->GetPixelDepth() == 8)
+			return false;
+		return true;
+	}
+	return false;
+}
+
+#endif

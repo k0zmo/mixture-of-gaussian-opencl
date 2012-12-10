@@ -110,10 +110,21 @@ public:
 
 	bool init(const std::string& videoStream)
 	{
-		grabber = std::unique_ptr<FrameGrabber>(new OpenCvFrameGrabber());
+#if defined(SAPERA_SUPPORT)
+		// Sprawdz suffix videoStream (.ccf)
+		size_t pos = videoStream.find_last_of(".ccf");
+		if(pos+1 == videoStream.length())
+		{
+			grabber = std::unique_ptr<FrameGrabber>(new SaperaFrameGrabber());
+		}
+		else
+#endif
+		{
+			grabber = std::unique_ptr<FrameGrabber>(new OpenCvFrameGrabber());
+		}
+		
 		if(!grabber->init(videoStream))
 			return false;
-		assert(grabber->frameFormat() == CV_8U);
 		dstFrame = cv::Mat(grabber->frameHeight(), grabber->frameWidth(), CV_8UC1);
 
 		int width = grabber->frameWidth();
