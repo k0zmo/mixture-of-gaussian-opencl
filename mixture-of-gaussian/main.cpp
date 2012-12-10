@@ -108,8 +108,17 @@ public:
 	{
 	}
 
-	bool init(int width, int height)
+	bool init(const std::string& videoStream)
 	{
+		grabber = std::unique_ptr<FrameGrabber>(new OpenCvFrameGrabber());
+		if(!grabber->init(videoStream))
+			return false;
+		assert(grabber->frameFormat() == CV_8U);
+		dstFrame = cv::Mat(grabber->frameHeight(), grabber->frameWidth(), CV_8UC1);
+
+		int width = grabber->frameWidth();
+		int height = grabber->frameHeight();
+
 		learningRate = std::stof(cfg.value("LearningRate", "MogParameters"));
 		const int nmixtures = std::stoi(cfg.value("NumMixtures", "MogParameters"));
 		if(nmixtures <= 0)
@@ -148,15 +157,24 @@ public:
 		return true;
 	}
 
-
-	clw::Event processFrame(const cv::Mat& frame, cv::Mat& dstFrame)
+	clw::Event processFrame()
 	{
-		clw::Event e0 = queue.asyncWriteBuffer(clFrame, frame.data, 0, inputFrameSize);
+		clw::Event e0 = queue.asyncWriteBuffer(clFrame, srcFrame.data, 0, inputFrameSize);
 		clw::Event e1 = grayscaleGPU.process(clFrame);
 		clw::Event e2 = mogGPU.process(grayscaleGPU.output(), learningRate);
 		clw::Event e3 = queue.asyncReadImage2D(mogGPU.output(), dstFrame.data, 0, 0, dstFrame.cols, dstFrame.rows);
 		return e3;
 	}
+
+	bool grabFrame()
+	{
+		bool success;
+		srcFrame = grabber->grab(&success);
+		return success;
+	}
+
+	const cv::Mat& finalFrame() const { return dstFrame; }
+	const cv::Mat& sourceFrame() const { return srcFrame; }
 
 private:
 	clw::Context context;
@@ -168,6 +186,10 @@ private:
 	MixtureOfGaussianGPU mogGPU;
 	GrayscaleGPU grayscaleGPU;
 
+	std::unique_ptr<FrameGrabber> grabber;
+	cv::Mat srcFrame;
+	cv::Mat dstFrame;
+
 	ConfigFile& cfg;
 	float learningRate;
 
@@ -175,52 +197,6 @@ private:
 	Worker(const Worker&);
 	Worker& operator=(const Worker&);
 };
-
-struct WorkerData
-{
-	std::unique_ptr<FrameGrabber> grabber;
-	cv::Mat srcFrame;
-	cv::Mat dstFrame;
-
-	bool init(const std::string& videoStream)
-	{
-		grabber = std::unique_ptr<FrameGrabber>(new OpenCvFrameGrabber());
-		if(!grabber->init(videoStream))
-			return false;
-		assert(grabber->frameFormat() == CV_8U);
-		dstFrame = cv::Mat(grabber->frameHeight(), grabber->frameWidth(), CV_8UC1);
-		return true;
-	}
-
-	int width() { return grabber->frameWidth(); }
-	int height() { return grabber->frameHeight(); }
-
-	bool grabFrame()
-	{
-		bool success;
-		srcFrame = grabber->grab(&success);
-		return success;
-	}
-};
-
-namespace std
-{
-	template<class _Ty> inline
-	unique_ptr<_Ty> make_unique()
-	{	
-		_Ty* _Rx = new _Ty();
-		unique_ptr<_Ty> _Ret(_Rx);
-		return _Ret;
-	}
-
-	template<class _Ty, class _Arg0, class _Arg1, class _Arg2, class _Arg3> inline
-	unique_ptr<_Ty> make_unique(_Arg0&& _Ax0, _Arg1&& _Ax1, _Arg2&& _Ax2, _Arg3&& _Ax3)
-	{	
-		_Ty* _Rx = new _Ty(std::forward<_Arg0>(_Ax0), std::forward<_Arg1>(_Ax1), std::forward<_Arg2>(_Ax2), std::forward<_Arg3>(_Ax3));
-		unique_ptr<_Ty> _Ret(_Rx);
-		return _Ret;
-	}
-}
 
 int main(int, char**)
 {
@@ -265,7 +241,6 @@ int main(int, char**)
 
 	std::vector<bool> finish;
 	std::vector<std::unique_ptr<Worker>> workers;
-	std::vector<std::unique_ptr<WorkerData>> workersData;
 	std::vector<std::string> titles;
 
 	for(int streamId = 1; streamId <= 5; ++streamId)
@@ -276,16 +251,11 @@ int main(int, char**)
 
 		if(!videoStream.empty())
 		{
-			auto workerData = std::make_unique<WorkerData>();//std::unique_ptr<WorkerData>(new WorkerData);
-			if(!workerData->init(videoStream))
-				continue;
-
-			auto worker = std::make_unique<Worker>(context ,device, queue, cfg);
-			if(!worker->init(workerData->width(), workerData->height()))
+			auto worker = std::unique_ptr<Worker>(new Worker(context ,device, queue, cfg));
+			if(!worker->init(videoStream))
 				continue;
 
 			workers.emplace_back(std::move(worker));
-			workersData.emplace_back(std::move(workerData));
 			titles.emplace_back(std::move(videoStream));
 			finish.push_back(false);
 
@@ -310,7 +280,7 @@ int main(int, char**)
 	{
 		// Grab a new frame
 		for(int i = 0; i < numVideoStreams; ++i)
-			finish[i] = workersData[i]->grabFrame();
+			finish[i] = workers[i]->grabFrame();
 
 		bool allFinish = false;
 		for(int i = 0; i < numVideoStreams; ++i)
@@ -324,7 +294,7 @@ int main(int, char**)
 		{
 			if(finish[i])
 			{
-				workers[i]->processFrame(workersData[i]->srcFrame, workersData[i]->dstFrame);
+				workers[i]->processFrame();
 				queue.flush();
 			}
 		}
@@ -336,9 +306,9 @@ int main(int, char**)
 
 		for(int i = 0; i < numVideoStreams; ++i)
 		{
-			cv::imshow(titles[i], workersData[i]->dstFrame);
+			cv::imshow(titles[i], workers[i]->finalFrame());
 			if(showSourceFrame)
-				cv::imshow(titles[i] + " source", workersData[i]->srcFrame);
+				cv::imshow(titles[i] + " source", workers[i]->sourceFrame());
 		}
 
 		int totalTime = int(stop - start);
