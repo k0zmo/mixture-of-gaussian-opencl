@@ -98,6 +98,7 @@
     <ClCompile Include="clw\clw\Program.cpp" />
     <ClCompile Include="clw\clw\Sampler.cpp" />
     <ClCompile Include="ConfigFile.cpp" />
+    <ClCompile Include="FrameGrabber.cpp" />
     <ClCompile Include="GrayscaleGPU.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MixtureOfGaussianCPU.cpp" />
@@ -129,6 +130,7 @@
     <ClInclude Include="clw\clw\Sampler.h" />
     <ClInclude Include="clw\clw\StlUtils.h" />
     <ClInclude Include="ConfigFile.h" />
+    <ClInclude Include="FrameGrabber.h" />
     <ClInclude Include="GrayscaleGPU.h" />
     <ClInclude Include="MixtureOfGaussianCPU.h" />
     <ClInclude Include="MixtureOfGaussianGPU.h" />

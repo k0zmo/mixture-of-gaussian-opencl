@@ -77,6 +77,9 @@
     <ClCompile Include="clw\clw\Grid.cpp">
       <Filter>clw</Filter>
     </ClCompile>
+    <ClCompile Include="FrameGrabber.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -141,6 +144,9 @@
     </ClInclude>
     <ClInclude Include="clw\clw\Grid.h">
       <Filter>clw</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameGrabber.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

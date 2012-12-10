@@ -13,6 +13,7 @@
 
 #include "MixtureOfGaussianGPU.h"
 #include "GrayscaleGPU.h"
+#include "FrameGrabber.h"
 
 namespace clwutils
 {
@@ -177,58 +178,28 @@ private:
 
 struct WorkerData
 {
-	cv::VideoCapture cap;
+	std::unique_ptr<FrameGrabber> grabber;
 	cv::Mat srcFrame;
 	cv::Mat dstFrame;
 
 	bool init(const std::string& videoStream)
 	{
-		size_t idx;
-		int device;
-
-		try
-		{
-			device = std::stoi(videoStream, &idx);
-			if(idx < videoStream.length())
-				device = 1;
-		}
-		catch(std::invalid_argument&)
-		{
-			device = -1;
-		}
-
-		// Check if video is opened
-		if(device != -1)
-			cap.open(device);
-		else
-			cap.open(videoStream);
-
-		if(!cap.isOpened())
-		{
-			std::cerr << "Can't load " << videoStream << ", qutting\n";
+		grabber = std::unique_ptr<FrameGrabber>(new OpenCvFrameGrabber());
+		if(!grabber->init(videoStream))
 			return false;
-		}
-
-		// Retrieve frame size
-		const int width = int(cap.get(CV_CAP_PROP_FRAME_WIDTH));
-		const int height = int(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
-		const int format  = int(cap.get(CV_CAP_PROP_FORMAT));
-		assert(format == CV_8U);
-
-		// Output MoG Image
-		dstFrame = cv::Mat(height, width, CV_8UC1);
+		assert(grabber->frameFormat() == CV_8U);
+		dstFrame = cv::Mat(grabber->frameHeight(), grabber->frameWidth(), CV_8UC1);
 		return true;
 	}
 
-	int width() { return int(cap.get(CV_CAP_PROP_FRAME_WIDTH)); }
-	int height() { return int(cap.get(CV_CAP_PROP_FRAME_HEIGHT)); }
+	int width() { return grabber->frameWidth(); }
+	int height() { return grabber->frameHeight(); }
 
 	bool grabFrame()
 	{
-		cap >> srcFrame;
-		if(srcFrame.rows == 0 || srcFrame.cols == 0)
-			return false;
-		return true;
+		bool success;
+		srcFrame = grabber->grab(&success);
+		return success;
 	}
 };
 
