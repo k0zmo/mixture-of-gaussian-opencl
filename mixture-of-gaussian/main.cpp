@@ -153,10 +153,6 @@ public:
 		int height = grabber->frameHeight();
 		int channels = grabber->frameNumChannels();
 
-		inputFrameSize = width * height * channels * sizeof(cl_uchar);
-		clFrame = context.createBuffer
-			(clw::Access_ReadOnly, clw::Location_Device, inputFrameSize);
-
 		// Initialize MoG on GPU
 		mogGPU.setMixtureParameters(200,
 			std::stof(cfg.value("VarianceThreshold", "MogParameters")),
@@ -165,13 +161,17 @@ public:
 			std::stof(cfg.value("InitialVariance", "MogParameters")),
 			std::stof(cfg.value("MinVariance", "MogParameters")));
 		mogGPU.init(width, height, workGroupSizeX, workGroupSizeY, nmixtures);
-		preprocess = 0;
+
+		inputFrameSize = width * height * channels * sizeof(cl_uchar);
 
 		if(channels == 3)
 		{
 			// Initialize Grayscaling on GPU
 			grayscaleGPU.init(width, height, workGroupSizeX, workGroupSizeY);
 			preprocess = 1;
+
+			clFrame = context.createBuffer
+				(clw::Access_ReadOnly, clw::Location_Device, inputFrameSize);
 		}
 		else if(channels == 1 && grabber->needBayer())
 		{
@@ -188,6 +188,16 @@ public:
 			}
 			bayerFilterGPU.init(width, height, workGroupSizeX, workGroupSizeX, bayer);
 			preprocess = 2;
+
+			clFrame = context.createBuffer
+				(clw::Access_ReadOnly, clw::Location_Device, inputFrameSize);
+		}
+		else
+		{
+			preprocess = 0;
+			clFrameGray = context.createImage2D(
+				clw::Access_ReadOnly, clw::Location_Device,
+				clw::ImageFormat(clw::Order_R, clw::Type_Normalized_UInt8), width, height);
 		}
 
 		return true;
@@ -211,9 +221,11 @@ public:
 			clw::Event e1 = bayerFilterGPU.process(clFrame);
 			sourceMogFrame = bayerFilterGPU.output();
 		}
+		// Passthrough
 		else
 		{
-			clw::Event e0 = queue.asyncWriteImage2D(sourceMogFrame, srcFrame.data, 0, 0, srcFrame.cols, srcFrame.rows);
+			clw::Event e0 = queue.asyncWriteImage2D(clFrameGray, srcFrame.data, 0, 0, srcFrame.cols, srcFrame.rows);
+			sourceMogFrame= clFrameGray;
 		}
 		
 		clw::Event e2 = mogGPU.process(sourceMogFrame, learningRate);
@@ -236,6 +248,7 @@ private:
 	clw::Device device;
 	clw::CommandQueue queue;
 	clw::Buffer clFrame;
+	clw::Image2D clFrameGray;
 	int inputFrameSize;
 	int preprocess; // 0 - no preprocess (frame is gray)
 	                // 1 - frame is rgb, grayscaling
