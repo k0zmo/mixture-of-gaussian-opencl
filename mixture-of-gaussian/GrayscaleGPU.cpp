@@ -3,8 +3,8 @@
 #include <iostream>
 
 GrayscaleGPU::GrayscaleGPU(const clw::Context& context,
-						   const clw::Device& device,
-						   const clw::CommandQueue& queue)
+                           const clw::Device& device,
+                           const clw::CommandQueue& queue)
 	: context(context)
 	, device(device)
 	, queue(queue)

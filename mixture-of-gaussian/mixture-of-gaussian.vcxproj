@@ -86,6 +86,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BayerFilterGPU.cpp" />
     <ClCompile Include="clw\clw\Buffer.cpp" />
     <ClCompile Include="clw\clw\CommandQueue.cpp" />
     <ClCompile Include="clw\clw\Context.cpp" />
@@ -116,6 +117,7 @@
     <ClCompile Include="QPCTimer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BayerFilterGPU.h" />
     <ClInclude Include="clw\clw\Buffer.h" />
     <ClInclude Include="clw\clw\clw.h" />
     <ClInclude Include="clw\clw\CommandQueue.h" />
@@ -140,6 +142,7 @@
     <ClInclude Include="QPCTimer.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="bayer.cl" />
     <None Include="color-conversion.cl" />
     <None Include="mixture-of-gaussian.cfg" />
     <None Include="mixture-of-gaussian.cl" />

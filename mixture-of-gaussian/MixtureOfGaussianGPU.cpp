@@ -5,8 +5,8 @@
 #include <sstream>
 
 MixtureOfGaussianGPU::MixtureOfGaussianGPU(const clw::Context& context,
-										   const clw::Device& device, 
-										   const clw::CommandQueue& queue)
+                                           const clw::Device& device, 
+                                           const clw::CommandQueue& queue)
 	: context(context)
 	, device(device)
 	, queue(queue)
@@ -21,11 +21,11 @@ MixtureOfGaussianGPU::MixtureOfGaussianGPU(const clw::Context& context,
 }
 
 void MixtureOfGaussianGPU::setMixtureParameters(int history,
-												float varianceThreshold,
-												float backgroundRatio,
-												float initialWeight,
-												float initialVariance,
-												float minVariance)
+                                                float varianceThreshold,
+                                                float backgroundRatio,
+                                                float initialWeight,
+                                                float initialVariance,
+                                                float minVariance)
 {
 	this->history = history;
 	this->varianceThreshold = varianceThreshold;
@@ -38,10 +38,10 @@ void MixtureOfGaussianGPU::setMixtureParameters(int history,
 }
 	
 void MixtureOfGaussianGPU::init(int imageWidth,
-								int imageHeight, 
-								int workGroupSizeX,
-								int workGroupSizeY,
-								int nmixtures)
+                                int imageHeight, 
+                                int workGroupSizeX,
+                                int workGroupSizeY,
+                                int nmixtures)
 {
 	nframe = 0;
 	createMoGKernel(nmixtures);
@@ -61,7 +61,7 @@ void MixtureOfGaussianGPU::init(int imageWidth,
 }
 
 void MixtureOfGaussianGPU::setKernelWorkGroupSize(int workGroupSizeX,
-												  int workGroupSizeY)
+                                                  int workGroupSizeY)
 {
 	if(!kernel.isNull())
 	{
@@ -71,7 +71,7 @@ void MixtureOfGaussianGPU::setKernelWorkGroupSize(int workGroupSizeX,
 }
 
 clw::Event MixtureOfGaussianGPU::process(clw::Image2D& inputGrayFrame,
-										 float learningRate)
+                                         float learningRate)
 {
 	if(kernel.isNull())
 		return clw::Event();
@@ -107,7 +107,7 @@ void MixtureOfGaussianGPU::createMoGKernel(int nmixtures)
 }
 
 void MixtureOfGaussianGPU::createMixtureDataBuffer(int npixels, 
-												   int nmixtures)
+                                                   int nmixtures)
 {
 	// Dane mikstur (stan wewnetrzny estymatora tla)
 	const int mixtureDataSize = nmixtures * npixels * 3 * sizeof(float);
@@ -147,7 +147,7 @@ void MixtureOfGaussianGPU::createMixtureParamsBuffer()
 }
 
 void MixtureOfGaussianGPU::createOutputImage(int width,
-											 int height)
+                                             int height)
 {
 	// Obraz (w zasadzie maska) pierwszego planu
 	outputImage = context.createImage2D

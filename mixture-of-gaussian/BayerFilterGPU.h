@@ -2,15 +2,24 @@
 
 #include <clw/clw.h>
 
-class GrayscaleGPU
+enum EBayerFilter
+{
+	Bayer_RG,
+	Bayer_BG,
+	Bayer_GR,
+	Bayer_GB
+};
+
+class BayerFilterGPU
 {
 public:
-	GrayscaleGPU(const clw::Context& context,
+	BayerFilterGPU(const clw::Context& context,
 		const clw::Device& device,
 		const clw::CommandQueue& queue);
 
 	void init(int imageWidth, int imageHeight,
-		int workGroupSizeX, int workGroupSizeY);
+		int workGroupSizeX, int workGroupSizeY,
+		EBayerFilter bayerFilter);
 
 	void setKernelWorkGroupSize(int workGroupSizeX, int workGroupSizeY);
 
@@ -18,7 +27,7 @@ public:
 	clw::Image2D output() const { return outputImage; }
 
 private:
-	void createRgb2GrayKernel();
+	void createBayer2GrayKernel(EBayerFilter bayerFilter);
 	void createOutputImage(int width, int height);
 
 private:
@@ -31,6 +40,7 @@ private:
 	int height;
 
 private:
-	GrayscaleGPU(const GrayscaleGPU&);
-	GrayscaleGPU& operator=(const GrayscaleGPU&);
+	BayerFilterGPU(const BayerFilterGPU&);
+	BayerFilterGPU& operator=(const BayerFilterGPU&);
 };
+

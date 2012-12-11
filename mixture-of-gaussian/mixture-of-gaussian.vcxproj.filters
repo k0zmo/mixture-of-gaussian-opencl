@@ -80,6 +80,9 @@
     <ClCompile Include="FrameGrabber.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BayerFilterGPU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Precompiled.h">
@@ -148,6 +151,9 @@
     <ClInclude Include="FrameGrabber.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BayerFilterGPU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="mixture-of-gaussian.cl">
@@ -157,6 +163,9 @@
       <Filter>Other files</Filter>
     </None>
     <None Include="color-conversion.cl">
+      <Filter>Other files</Filter>
+    </None>
+    <None Include="bayer.cl">
       <Filter>Other files</Filter>
     </None>
   </ItemGroup>
