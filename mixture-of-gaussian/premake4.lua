@@ -21,6 +21,8 @@ solution "mixture-of-gaussian"
 			"MixtureOfGaussianCPU.*",
 			"MixtureOfGaussianGPU.*",
 			"GrayscaleGPU.*",
+			"BayerFilterGPU.*",
+			"FrameGrabber.*",
 			"QPCTimer.*",
 			"ConfigFile.*"
 		}

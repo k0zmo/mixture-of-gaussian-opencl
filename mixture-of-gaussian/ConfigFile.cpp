@@ -5,7 +5,9 @@
 using std::string;
 using std::unordered_map;
 
-#pragma warning(disable:4503)
+#ifdef _MSC_VER
+#  pragma warning(disable:4503)
+#endif
 
 namespace detail 
 {

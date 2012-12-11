@@ -1,6 +1,8 @@
 #include "FrameGrabber.h"
 
 #include <opencv2/highgui/highgui.hpp>
+#include <stdexcept>
+#include <iostream>
 
 OpenCvFrameGrabber::OpenCvFrameGrabber()
 {

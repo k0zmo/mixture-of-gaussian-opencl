@@ -1,6 +1,6 @@
 #include "BayerFilterGPU.h"
 
-
+#include <iostream>
 
 BayerFilterGPU::BayerFilterGPU(const clw::Context& context,
                                const clw::Device& device, 

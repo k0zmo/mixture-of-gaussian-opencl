@@ -383,8 +383,6 @@ int main(int, char**)
 				cv::imshow(titles[i] + " source", workers[i]->sourceFrame());
 		}
 
-		int totalTime = int(stop - start);
-
 		int key = cv::waitKey(std::max(frameInterval, int((stop - start) * 1000)));
 		if(key >= 0)
 			break;
