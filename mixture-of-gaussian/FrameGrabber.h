@@ -14,7 +14,8 @@ public:
 	virtual cv::Mat grab(bool* success) = 0;
 	virtual int frameWidth() const = 0;
 	virtual int frameHeight() const = 0;
-	virtual int frameFormat() const = 0;
+	virtual int frameNumChannels() const = 0;
+	virtual int framePixelDepth() const = 0;
 	virtual bool needBayer() const = 0;
 };
 
@@ -29,14 +30,16 @@ public:
 	virtual cv::Mat grab(bool* success) override;
 	virtual int frameWidth() const override;
 	virtual int frameHeight() const override;
-	virtual int frameFormat() const override;
+	virtual int frameNumChannels() const override;
+	virtual int framePixelDepth() const override;
 	virtual bool needBayer() const override;
 
 private:
 	cv::VideoCapture cap;
 	int width,
 		height,
-		format;
+		pixelDepth,
+		numChannels;
 };
 
 // Make sure it isn't included in Linux builds
@@ -58,7 +61,8 @@ public:
 	virtual cv::Mat grab(bool* success) override;
 	virtual int frameWidth() const override;
 	virtual int frameHeight() const override;
-	virtual int frameFormat() const override;
+	virtual int frameNumChannels() const override;
+	virtual int framePixelDepth() const override;
 	virtual bool needBayer() const override;
 
 private:

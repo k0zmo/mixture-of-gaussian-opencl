@@ -6,14 +6,15 @@
 #include <iostream>
 #include <memory>
 
+#include <clw/clw.h>
+
 #include "QPCTimer.h"
 #include "ConfigFile.h"
-
-#include <clw/clw.h>
+#include "FrameGrabber.h"
 
 #include "MixtureOfGaussianGPU.h"
 #include "GrayscaleGPU.h"
-#include "FrameGrabber.h"
+#include "BayerFilterGPU.h"
 
 namespace clwutils
 {
@@ -103,33 +104,14 @@ public:
 		, queue(queue)
 		, inputFrameSize(0)
 		, mogGPU(context, device, queue)
-		, grayscaleGPU(context, device, queue)		
-		, cfg(cfg)		
+		, grayscaleGPU(context, device, queue)
+		, bayerFilterGPU(context, device, queue)
+		, cfg(cfg)
 	{
 	}
 
 	bool init(const std::string& videoStream)
 	{
-#if defined(SAPERA_SUPPORT)
-		// Sprawdz suffix videoStream (.ccf)
-		size_t pos = videoStream.find_last_of(".ccf");
-		if(pos+1 == videoStream.length())
-		{
-			grabber = std::unique_ptr<FrameGrabber>(new SaperaFrameGrabber());
-		}
-		else
-#endif
-		{
-			grabber = std::unique_ptr<FrameGrabber>(new OpenCvFrameGrabber());
-		}
-		
-		if(!grabber->init(videoStream))
-			return false;
-		dstFrame = cv::Mat(grabber->frameHeight(), grabber->frameWidth(), CV_8UC1);
-
-		int width = grabber->frameWidth();
-		int height = grabber->frameHeight();
-
 		learningRate = std::stof(cfg.value("LearningRate", "MogParameters"));
 		const int nmixtures = std::stoi(cfg.value("NumMixtures", "MogParameters"));
 		if(nmixtures <= 0)
@@ -147,8 +129,30 @@ public:
 			return false;
 		}
 
-		// Input RGB image (as a clBuffer) - actually BGR
-		const int channels = 3;
+		// Inicjalizuj frame grabbera
+
+#if defined(SAPERA_SUPPORT)
+		// Sprawdz suffix videoStream (.ccf)
+		size_t pos = videoStream.find_last_of(".ccf");
+		if(pos+1 == videoStream.length())
+		{
+			grabber = std::unique_ptr<FrameGrabber>(new SaperaFrameGrabber());
+		}
+		else
+#endif
+		{
+			grabber = std::unique_ptr<FrameGrabber>(new OpenCvFrameGrabber());
+		}
+		
+		if(!grabber->init(videoStream))
+			return false;
+		dstFrame = cv::Mat(grabber->frameHeight(), grabber->frameWidth(), CV_8UC1);
+
+		// Pobierz dane o formacie ramki
+		int width = grabber->frameWidth();
+		int height = grabber->frameHeight();
+		int channels = grabber->frameNumChannels();
+
 		inputFrameSize = width * height * channels * sizeof(cl_uchar);
 		clFrame = context.createBuffer
 			(clw::Access_ReadOnly, clw::Location_Device, inputFrameSize);
@@ -161,18 +165,58 @@ public:
 			std::stof(cfg.value("InitialVariance", "MogParameters")),
 			std::stof(cfg.value("MinVariance", "MogParameters")));
 		mogGPU.init(width, height, workGroupSizeX, workGroupSizeY, nmixtures);
+		preprocess = 0;
 
-		// Initialize Grayscaling on GPU
-		grayscaleGPU.init(width, height, workGroupSizeX, workGroupSizeY);
+		if(channels == 3)
+		{
+			// Initialize Grayscaling on GPU
+			grayscaleGPU.init(width, height, workGroupSizeX, workGroupSizeY);
+			preprocess = 1;
+		}
+		else if(channels == 1 && grabber->needBayer())
+		{
+			std::string bayerCfg = cfg.value("Bayer", "General");
+			EBayerFilter bayer;
+			if(bayerCfg == "RG") bayer = Bayer_RG;
+			else if(bayerCfg == "BG") bayer = Bayer_BG;
+			else if(bayerCfg == "GR") bayer = Bayer_GR;
+			else if(bayerCfg == "GB") bayer = Bayer_GB;
+			else
+			{
+				std::cerr << "Unknown 'Bayer' parameter (must be RG, BG, GR or GB)";
+				return false;
+			}
+			bayerFilterGPU.init(width, height, workGroupSizeX, workGroupSizeX, bayer);
+			preprocess = 2;
+		}
 
 		return true;
 	}
 
 	clw::Event processFrame()
 	{
-		clw::Event e0 = queue.asyncWriteBuffer(clFrame, srcFrame.data, 0, inputFrameSize);
-		clw::Event e1 = grayscaleGPU.process(clFrame);
-		clw::Event e2 = mogGPU.process(grayscaleGPU.output(), learningRate);
+		clw::Image2D sourceMogFrame;
+
+		// Grayscaling
+		if(preprocess == 1)
+		{
+			clw::Event e0 = queue.asyncWriteBuffer(clFrame, srcFrame.data, 0, inputFrameSize);
+			clw::Event e1 = grayscaleGPU.process(clFrame);
+			sourceMogFrame = grayscaleGPU.output();
+		}
+		// Bayer filter
+		else if(preprocess == 2)
+		{
+			clw::Event e0 = queue.asyncWriteBuffer(clFrame, srcFrame.data, 0, inputFrameSize);
+			clw::Event e1 = bayerFilterGPU.process(clFrame);
+			sourceMogFrame = bayerFilterGPU.output();
+		}
+		else
+		{
+			clw::Event e0 = queue.asyncWriteImage2D(sourceMogFrame, srcFrame.data, 0, 0, srcFrame.cols, srcFrame.rows);
+		}
+		
+		clw::Event e2 = mogGPU.process(sourceMogFrame, learningRate);
 		clw::Event e3 = queue.asyncReadImage2D(mogGPU.output(), dstFrame.data, 0, 0, dstFrame.cols, dstFrame.rows);
 		return e3;
 	}
@@ -193,9 +237,13 @@ private:
 	clw::CommandQueue queue;
 	clw::Buffer clFrame;
 	int inputFrameSize;
+	int preprocess; // 0 - no preprocess (frame is gray)
+	                // 1 - frame is rgb, grayscaling
+	                // 2 - frame needs bayerFilter
 
 	MixtureOfGaussianGPU mogGPU;
 	GrayscaleGPU grayscaleGPU;
+	BayerFilterGPU bayerFilterGPU;
 
 	std::unique_ptr<FrameGrabber> grabber;
 	cv::Mat srcFrame;

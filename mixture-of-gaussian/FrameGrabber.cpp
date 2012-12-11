@@ -40,10 +40,16 @@ bool OpenCvFrameGrabber::init(const std::string& stream)
 		return false;
 	}
 
+	// HACK
+	cv::Mat dummy;
+	cap >> dummy;
+
 	// Retrieve frame size
 	width = int(cap.get(CV_CAP_PROP_FRAME_WIDTH));
 	height = int(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
-	format  = int(cap.get(CV_CAP_PROP_FORMAT));
+
+	pixelDepth  = dummy.depth();
+	numChannels = dummy.channels();
 
 	return true;
 }
@@ -71,8 +77,10 @@ int OpenCvFrameGrabber::frameWidth() const
 { return width; }
 int OpenCvFrameGrabber::frameHeight() const
 { return height; }
-int OpenCvFrameGrabber::frameFormat() const
-{ return format; }
+int OpenCvFrameGrabber::frameNumChannels() const
+{ return numChannels; }
+int OpenCvFrameGrabber::framePixelDepth() const
+{ return pixelDepth; }
 bool OpenCvFrameGrabber::needBayer() const
 { return false; }
 
@@ -224,10 +232,18 @@ int SaperaFrameGrabber::frameHeight() const
 	return 0;
 }
 
-int SaperaFrameGrabber::frameFormat() const
+int SaperaFrameGrabber::frameNumChannels() const
+{
+	// NOT yet tested
+	if(buffer)
+		return buffer->GetBytesPerPixel() / buffer->GetPixelDepth();
+	return 0;
+}
+
+int SaperaFrameGrabber::framePixelDepth() const
 {
 	if(buffer)
-		return int(buffer->GetFormat());
+		return buffer->GetPixelDepth();
 	return 0;
 }
 
