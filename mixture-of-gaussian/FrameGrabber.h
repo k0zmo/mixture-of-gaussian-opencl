@@ -3,9 +3,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <string>
 
-// Uncomment this to support sapera cameras
-//#define SAPERA_SUPPORT
-
 class FrameGrabber
 {
 public:

@@ -162,10 +162,15 @@ public:
 			std::stof(cfg.value("MinVariance", "MogParameters")));
 		mogGPU.init(width, height, workGroupSizeX, workGroupSizeY, nmixtures);
 
+		std::cout << "\n  frame width: " << width <<
+			"\n  frame height: " << height << 
+			"\n  num channels: " << channels << "x" << grabber->framePixelDepth() << " bits \n";
 		inputFrameSize = width * height * channels * sizeof(cl_uchar);
 
 		if(channels == 3)
 		{
+			std::cout << "  preprocessing frame: grayscalling\n";
+
 			// Initialize Grayscaling on GPU
 			grayscaleGPU.init(width, height, workGroupSizeX, workGroupSizeY);
 			preprocess = 1;
@@ -186,6 +191,8 @@ public:
 				std::cerr << "Unknown 'Bayer' parameter (must be RG, BG, GR or GB)";
 				return false;
 			}
+			std::cout << "  preprocessing frame: bayer " << bayerCfg << "\n";
+
 			bayerFilterGPU.init(width, height, workGroupSizeX, workGroupSizeX, bayer);
 			preprocess = 2;
 
@@ -194,6 +201,7 @@ public:
 		}
 		else
 		{
+			std::cout << "  preprocessing frame: none (already monochrome format)\n";
 			preprocess = 0;
 			clFrameGray = context.createImage2D(
 				clw::Access_ReadOnly, clw::Location_Device,
@@ -374,7 +382,7 @@ int main(int, char**)
 
 		double stop = timer.currentTime();
 
-		std::cout << "Total time: " << (stop - start) * 1000.0 << " ms\n";
+		std::cout << "\nTotal time: " << (stop - start) * 1000.0 << " ms";
 
 		for(int i = 0; i < numVideoStreams; ++i)
 		{

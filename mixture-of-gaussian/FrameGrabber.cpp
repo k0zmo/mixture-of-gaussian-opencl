@@ -49,9 +49,28 @@ bool OpenCvFrameGrabber::init(const std::string& stream)
 	// Retrieve frame size
 	width = int(cap.get(CV_CAP_PROP_FRAME_WIDTH));
 	height = int(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
-
+	
 	pixelDepth  = dummy.depth();
 	numChannels = dummy.channels();
+
+	switch(pixelDepth)
+	{
+	case CV_8U: 
+	case CV_8S: 
+		pixelDepth = 8;
+		break;
+	case CV_16U:
+	case CV_16S:
+		pixelDepth = 16;
+		break;
+	case CV_32S:
+	case CV_32F:
+		pixelDepth = 32;
+		break;
+	case CV_64F:
+		pixelDepth = 64;
+		break;
+	}
 
 	return true;
 }
@@ -238,7 +257,7 @@ int SaperaFrameGrabber::frameNumChannels() const
 {
 	// NOT yet tested
 	if(buffer)
-		return buffer->GetBytesPerPixel() / buffer->GetPixelDepth();
+		return (buffer->GetBytesPerPixel() * 8) / buffer->GetPixelDepth();
 	return 0;
 }
 
@@ -254,7 +273,7 @@ bool SaperaFrameGrabber::needBayer() const
 	// NOT yet tested
 	if(buffer)
 	{
-		if(buffer->GetPixelDepth() == 8)
+		if(buffer->GetBytesPerPixel() > 2)
 			return false;
 		return true;
 	}
