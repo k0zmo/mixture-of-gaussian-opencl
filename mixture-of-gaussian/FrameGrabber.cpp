@@ -159,6 +159,11 @@ bool SaperaFrameGrabber::init(const std::string& stream)
 		return false;
 	}
 
+	std::cout << "\n  Sapera initialized successfully:" 
+		<< "  \nBuffer pixel depth: " << buffer->GetPixelDepth()
+		<< "  \nBuffer bytes per pixel: " << buffer->GetBytesPerPixel()
+		<< "\n\n";
+
 	// Not sure if that's ok
 	image = cvCreateImage(cvSize(buffer->GetWidth(), buffer->GetHeight()), IPL_DEPTH_16U, 1);
 	dummyImageData = image->imageData;
@@ -271,13 +276,14 @@ int SaperaFrameGrabber::framePixelDepth() const
 bool SaperaFrameGrabber::needBayer() const
 {
 	// NOT yet tested
-	if(buffer)
+	/*if(buffer)
 	{
 		if(buffer->GetBytesPerPixel() > 2)
 			return false;
 		return true;
 	}
-	return false;
+	return false;*/
+	return true;
 }
 
 #endif

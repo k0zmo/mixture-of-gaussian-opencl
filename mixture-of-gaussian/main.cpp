@@ -355,9 +355,17 @@ int main(int, char**)
 	int frameInterval = std::stoi(cfg.value("FrameInterval", "General"));
 	frameInterval = std::min(std::max(frameInterval, 1), 100);
 	bool showSourceFrame = cfg.value("ShowSourceFrame", "General") == "yes";
+	std::cout << "\n";
+
+	double start = timer.currentTime();
 
 	for(;;)
 	{
+		double oldStart = start;
+		start = timer.currentTime();
+
+		std::cout << "Time between consecutive frames: " << (start - oldStart) * 1000.0 << " ms\n";
+
 		// Grab a new frame
 		for(int i = 0; i < numVideoStreams; ++i)
 			finish[i] = workers[i]->grabFrame();
@@ -368,7 +376,7 @@ int main(int, char**)
 		if(!allFinish)
 			break;
 
-		double start = timer.currentTime();
+		start = timer.currentTime();
 
 		for(int i = 0; i < numVideoStreams; ++i)
 		{
@@ -382,7 +390,7 @@ int main(int, char**)
 
 		double stop = timer.currentTime();
 
-		std::cout << "\nTotal time: " << (stop - start) * 1000.0 << " ms";
+		std::cout << "Total processing and transfer time: " << (stop - start) * 1000.0 << " ms\n\n";
 
 		for(int i = 0; i < numVideoStreams; ++i)
 		{
@@ -391,7 +399,10 @@ int main(int, char**)
 				cv::imshow(titles[i] + " source", workers[i]->sourceFrame());
 		}
 
-		int key = cv::waitKey(std::max(frameInterval, int((stop - start) * 1000)));
+		int time = int((stop - start) * 1000);
+		int delay = std::max(1, frameInterval - time);
+
+		int key = cv::waitKey(delay);
 		if(key >= 0)
 			break;
 	}
