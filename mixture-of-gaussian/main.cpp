@@ -103,6 +103,7 @@ public:
 		, device(device)
 		, queue(queue)
 		, inputFrameSize(0)
+		, showIntermediateFrame(false)
 		, mogGPU(context, device, queue)
 		, grayscaleGPU(context, device, queue)
 		, bayerFilterGPU(context, device, queue)
@@ -208,6 +209,10 @@ public:
 				clw::ImageFormat(clw::Order_R, clw::Type_Normalized_UInt8), width, height);
 		}
 
+		showIntermediateFrame = cfg.value("ShowIntermediateFrame", "General") == "yes";
+		if(showIntermediateFrame)
+			interFrame = cv::Mat(height, width, CV_8UC1);
+
 		return true;
 	}
 
@@ -235,6 +240,11 @@ public:
 			clw::Event e0 = queue.asyncWriteImage2D(clFrameGray, srcFrame.data, 0, 0, srcFrame.cols, srcFrame.rows);
 			sourceMogFrame= clFrameGray;
 		}
+
+		if(showIntermediateFrame && preprocess != 0)
+		{
+			queue.asyncReadImage2D(sourceMogFrame, interFrame.data, 0, 0, interFrame.cols, interFrame.rows);
+		}
 		
 		clw::Event e2 = mogGPU.process(sourceMogFrame, learningRate);
 		clw::Event e3 = queue.asyncReadImage2D(mogGPU.output(), dstFrame.data, 0, 0, dstFrame.cols, dstFrame.rows);
@@ -250,6 +260,7 @@ public:
 
 	const cv::Mat& finalFrame() const { return dstFrame; }
 	const cv::Mat& sourceFrame() const { return srcFrame; }
+	const cv::Mat& intermediateFrame() const { return interFrame; }
 
 private:
 	clw::Context context;
@@ -261,6 +272,7 @@ private:
 	int preprocess; // 0 - no preprocess (frame is gray)
 	                // 1 - frame is rgb, grayscaling
 	                // 2 - frame needs bayerFilter
+	bool showIntermediateFrame;
 
 	MixtureOfGaussianGPU mogGPU;
 	GrayscaleGPU grayscaleGPU;
@@ -269,6 +281,7 @@ private:
 	std::unique_ptr<FrameGrabber> grabber;
 	cv::Mat srcFrame;
 	cv::Mat dstFrame;
+	cv::Mat interFrame;
 
 	ConfigFile& cfg;
 	float learningRate;
@@ -355,6 +368,7 @@ int main(int, char**)
 	int frameInterval = std::stoi(cfg.value("FrameInterval", "General"));
 	frameInterval = std::min(std::max(frameInterval, 1), 100);
 	bool showSourceFrame = cfg.value("ShowSourceFrame", "General") == "yes";
+	bool showIntermediateFrame = cfg.value("ShowIntermediateFrame", "General") == "yes";
 	std::cout << "\n";
 
 	double start = timer.currentTime();
@@ -397,6 +411,8 @@ int main(int, char**)
 			cv::imshow(titles[i], workers[i]->finalFrame());
 			if(showSourceFrame)
 				cv::imshow(titles[i] + " source", workers[i]->sourceFrame());
+			if(showIntermediateFrame)
+				cv::imshow(titles[i] + " intermediate frame", workers[i]->intermediateFrame());
 		}
 
 		int time = int((stop - start) * 1000);
