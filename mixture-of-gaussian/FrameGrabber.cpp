@@ -165,7 +165,17 @@ bool SaperaFrameGrabber::init(const std::string& stream)
 		<< "\n\n";
 
 	// Not sure if that's ok
-	image = cvCreateImage(cvSize(buffer->GetWidth(), buffer->GetHeight()), IPL_DEPTH_16U, 1);
+	if(buffer->GetPixelDepth() > 8)
+	{
+		// 10 or 12 bits
+		image = cvCreateImage(cvSize(buffer->GetWidth(), buffer->GetHeight()), IPL_DEPTH_16U, 1);
+	}
+	else
+	{
+		// normal 8 bits
+		image = cvCreateImage(cvSize(buffer->GetWidth(), buffer->GetHeight()), IPL_DEPTH_8U, 1);
+	}
+
 	dummyImageData = image->imageData;
 	return true;
 }
@@ -232,15 +242,6 @@ cv::Mat SaperaFrameGrabber::grab(bool* success)
 		tmp.convertTo(frame, CV_8UC1, 0.0625);
 	}
 
-	//// Nie wiem czy to do konca jest poprawne
-	//if(frame.channels() != 1)
-	//{
-	//	int code = (frame.channels() == 3)
-	//		? CV_BGR2GRAY
-	//		: CV_BGRA2GRAY;
-	//	cvtColor(frame, frame, code);
-	//}
-
 	return frame;
 }
 
@@ -275,14 +276,11 @@ int SaperaFrameGrabber::framePixelDepth() const
 
 bool SaperaFrameGrabber::needBayer() const
 {
-	// NOT yet tested
-	/*if(buffer)
+	if(acq)
 	{
-		if(buffer->GetBytesPerPixel() > 2)
-			return false;
-		return true;
+		std::cout << "(DEBUG) Is hardware bayer available: " 
+			<< acq->IsBayerAvailable() << "\n";
 	}
-	return false;*/
 	return true;
 }
 
