@@ -92,6 +92,154 @@ namespace clwutils
 	}
 }
 
+class WorkerCPU
+{
+public:
+	WorkerCPU(ConfigFile& cfg)
+		: showIntermediateFrame(false)
+		, cfg(cfg)
+	{}
+
+	bool init(const std::string& videoStream)
+	{
+		learningRate = std::stof(cfg.value("LearningRate", "MogParameters"));
+		const int nmixtures = std::stoi(cfg.value("NumMixtures", "MogParameters"));
+		if(nmixtures <= 0)
+		{
+			std::cerr << "Parameter NumMixtures is wrong, must be more than 0\n";
+			return false;
+		}
+
+		// Inicjalizuj frame grabbera
+#if defined(SAPERA_SUPPORT)
+		// Sprawdz suffix videoStream (.ccf)
+		size_t pos = videoStream.find_last_of(".ccf");
+		if(pos+1 == videoStream.length())
+		{
+			grabber = std::unique_ptr<FrameGrabber>(new SaperaFrameGrabber());
+		}
+		else
+#endif
+		{
+			grabber = std::unique_ptr<FrameGrabber>(new OpenCvFrameGrabber());
+		}
+
+		if(!grabber->init(videoStream))
+			return false;
+		dstFrame = cv::Mat(grabber->frameHeight(), grabber->frameWidth(), CV_8UC1);
+
+		// Pobierz dane o formacie ramki
+		int width = grabber->frameWidth();
+		int height = grabber->frameHeight();
+		int channels = grabber->frameNumChannels();
+
+		mog = cv::BackgroundSubtractorMOG(200, nmixtures,
+			std::stof(cfg.value("BackgroundRatio", "MogParameters")));
+		mog.initialize(cv::Size(height, width), CV_8UC1);
+
+		std::cout << "\n  frame width: " << width <<
+			"\n  frame height: " << height << 
+			"\n  num channels: " << channels << "x" << grabber->framePixelDepth() << " bits \n";
+		//inputFrameSize = width * height * channels * sizeof(cl_uchar);
+
+		if(channels == 3)
+		{
+			std::cout << "  preprocessing frame: grayscalling\n";
+			preprocess = 1;
+		}
+		else if(channels == 1 && grabber->needBayer())
+		{
+			std::string bayerCfg = cfg.value("Bayer", "General");
+			if(bayerCfg == "RG") bayer = Bayer_RG;
+			else if(bayerCfg == "BG") bayer = Bayer_BG;
+			else if(bayerCfg == "GR") bayer = Bayer_GR;
+			else if(bayerCfg == "GB") bayer = Bayer_GB;
+			else
+			{
+				std::cerr << "Unknown 'Bayer' parameter (must be RG, BG, GR or GB)";
+				return false;
+			}
+			std::cout << "  preprocessing frame: bayer " << bayerCfg << "\n";
+			preprocess = 2;
+		}
+		else
+		{
+			std::cout << "  preprocessing frame: none (already monochrome format)\n";
+			preprocess = 0;
+		}
+
+		showIntermediateFrame = cfg.value("ShowIntermediateFrame", "General") == "yes";
+		if(showIntermediateFrame)
+			interFrame = cv::Mat(height, width, CV_8UC1);
+
+		return true;
+	}
+
+	void processFrame()
+	{
+		cv::Mat sourceMogFrame;
+
+		// Grayscalling
+		if(preprocess == 1)
+		{
+			cv::cvtColor(srcFrame, sourceMogFrame, CV_BGR2GRAY);
+		}
+		// Bayer filter
+		else if(preprocess == 2)
+		{
+			switch(bayer)
+			{
+			case Bayer_RG: cv::cvtColor(srcFrame, sourceMogFrame, CV_BayerRG2GRAY); break;
+			case Bayer_BG: cv::cvtColor(srcFrame, sourceMogFrame, CV_BayerBG2GRAY); break;
+			case Bayer_GR: cv::cvtColor(srcFrame, sourceMogFrame, CV_BayerGR2GRAY); break;
+			case Bayer_GB: cv::cvtColor(srcFrame, sourceMogFrame, CV_BayerGB2GRAY); break;
+			}			
+		}
+		// Passthrough
+		else
+		{
+			sourceMogFrame = srcFrame;
+		}
+
+		if(showIntermediateFrame && preprocess != 0)
+			interFrame = sourceMogFrame;
+
+		mog(sourceMogFrame, dstFrame, learningRate);
+	}
+
+	bool grabFrame()
+	{
+		bool success;
+		srcFrame = grabber->grab(&success);
+		return success;
+	}
+
+	const cv::Mat& finalFrame() const { return dstFrame; }
+	const cv::Mat& sourceFrame() const { return srcFrame; }
+	const cv::Mat& intermediateFrame() const { return interFrame; }
+
+private:
+	int preprocess; // 0 - no preprocess (frame is gray)
+	                // 1 - frame is rgb, grayscaling
+	                // 2 - frame needs bayerFilter
+	bool showIntermediateFrame;
+
+	std::unique_ptr<FrameGrabber> grabber;
+	cv::Mat srcFrame;
+	cv::Mat dstFrame;
+	cv::Mat interFrame;
+
+	EBayerFilter bayer;
+	cv::BackgroundSubtractorMOG mog;
+
+	ConfigFile& cfg;
+	float learningRate;
+
+private:
+	WorkerCPU(const WorkerCPU&);
+	WorkerCPU& operator=(const WorkerCPU&);
+};
+
 class Worker
 {
 public:
@@ -302,6 +450,8 @@ int main(int, char**)
 	}
 	std::string devpick = cfg.value("Device", "General");
 
+#if 0
+
 	// Initialize OpenCL
 	clw::Context context;
 
@@ -422,4 +572,96 @@ int main(int, char**)
 		if(key >= 0)
 			break;
 	}
+#else
+	int numVideoStreams = 0;
+
+	std::vector<bool> finish;
+	std::vector<std::unique_ptr<WorkerCPU>> workers;
+	std::vector<std::string> titles;
+
+	for(int streamId = 1; streamId <= 5; ++streamId)
+	{
+		std::string cfgVideoStream = "VideoStream";
+		cfgVideoStream += streamId + '0';
+		std::string videoStream = cfg.value(cfgVideoStream, "General");
+
+		if(!videoStream.empty())
+		{
+			auto worker = std::unique_ptr<WorkerCPU>(new WorkerCPU(cfg));
+			if(!worker->init(videoStream))
+				continue;
+
+			workers.emplace_back(std::move(worker));
+			titles.emplace_back(std::move(videoStream));
+			finish.push_back(false);
+
+			++numVideoStreams;
+		}
+	}
+
+	if(numVideoStreams < 1)
+	{
+		std::wcout << "No video stream to process\n";
+		std::cin.get();
+		std::exit(-1);
+	}
+
+	QPCTimer timer;
+
+	int frameInterval = std::stoi(cfg.value("FrameInterval", "General"));
+	frameInterval = std::min(std::max(frameInterval, 1), 100);
+	bool showSourceFrame = cfg.value("ShowSourceFrame", "General") == "yes";
+	bool showIntermediateFrame = cfg.value("ShowIntermediateFrame", "General") == "yes";
+	std::cout << "\n";
+
+	double start = timer.currentTime();
+
+	for(;;)
+	{
+		double oldStart = start;
+		start = timer.currentTime();
+
+		std::cout << "Time between consecutive frames: " << (start - oldStart) * 1000.0 << " ms\n";
+
+		// Grab a new frame
+		for(int i = 0; i < numVideoStreams; ++i)
+			finish[i] = workers[i]->grabFrame();
+
+		bool allFinish = false;
+		for(int i = 0; i < numVideoStreams; ++i)
+			allFinish = allFinish || finish[i];
+		if(!allFinish)
+			break;
+
+		start = timer.currentTime();
+
+		for(int i = 0; i < numVideoStreams; ++i)
+		{
+			if(finish[i])
+			{
+				workers[i]->processFrame();
+			}
+		}
+
+		double stop = timer.currentTime();
+
+		std::cout << "Total processing and transfer time: " << (stop - start) * 1000.0 << " ms\n\n";
+
+		for(int i = 0; i < numVideoStreams; ++i)
+		{
+			cv::imshow(titles[i], workers[i]->finalFrame());
+			if(showSourceFrame)
+				cv::imshow(titles[i] + " source", workers[i]->sourceFrame());
+			if(showIntermediateFrame)
+				cv::imshow(titles[i] + " intermediate frame", workers[i]->intermediateFrame());
+		}
+
+		int time = int((stop - start) * 1000);
+		int delay = std::max(1, frameInterval - time);
+
+		int key = cv::waitKey(delay);
+		if(key >= 0)
+			break;
+	}
+#endif
 }
