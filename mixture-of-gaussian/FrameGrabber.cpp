@@ -160,8 +160,8 @@ bool SaperaFrameGrabber::init(const std::string& stream)
 	}
 
 	std::cout << "\n  Sapera initialized successfully:" 
-		<< "  \nBuffer pixel depth: " << buffer->GetPixelDepth()
-		<< "  \nBuffer bytes per pixel: " << buffer->GetBytesPerPixel()
+		<< "\n  Buffer pixel depth: " << buffer->GetPixelDepth()
+		<< "\n  Buffer bytes per pixel: " << buffer->GetBytesPerPixel()
 		<< "\n\n";
 
 	// Not sure if that's ok
