@@ -2,6 +2,10 @@
 
 #include <opencv2/core/core.hpp>
 
+//
+// Currenty unused, was used only during tests
+//
+
 static const int defaultNumMixtures = 5;
 static const int defaultHistory = 200;
 static const float defaultBackgroundRatio = 0.7f;

@@ -158,6 +158,8 @@
       </ForcedIncludeFiles>
     </ClCompile>
     <ClCompile Include="QPCTimer.cpp" />
+    <ClCompile Include="WorkerGPU.cpp" />
+    <ClCompile Include="WorkerCPU.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BayerFilterGPU.h" />
@@ -183,6 +185,8 @@
     <ClInclude Include="MixtureOfGaussianGPU.h" />
     <ClInclude Include="Precompiled.h" />
     <ClInclude Include="QPCTimer.h" />
+    <ClInclude Include="WorkerCPU.h" />
+    <ClInclude Include="WorkerGPU.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="bayer.cl" />
