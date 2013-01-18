@@ -264,6 +264,8 @@ void mainGPU(ConfigFile& cfg)
 
 	double start = timer.currentTime();
 
+	std::vector<clw::EventList> eventLists(numVideoStreams);
+
 	for(;;)
 	{
 		double oldStart = start;
@@ -287,15 +289,24 @@ void mainGPU(ConfigFile& cfg)
 		{
 			if(finish[i])
 			{
-				workers[i]->processFrame();
+				eventLists[i] = workers[i]->processFrame();
 				queue.flush();
 			}
 		}
 		queue.finish();
 
 		double stop = timer.currentTime();
+		double mogProcessingTime = 0;
 
-		std::cout << "Total processing and transfer time: " << (stop - start) * 1000.0 << " ms\n\n";
+		for(int i = 0; i < numVideoStreams; ++i)
+		{
+			const auto& event = eventLists[i].at(0);
+			mogProcessingTime += (event.finishTime() - event.startTime()) * 1e-6;
+		}
+
+		std::cout << "Total processing and transfer time: " << 
+			(stop - start) * 1000.0 << " ms\n";
+		std::cout << "MoG processing time: " << mogProcessingTime << " ms\n\n";
 
 		for(int i = 0; i < numVideoStreams; ++i)
 		{

@@ -1,5 +1,10 @@
 #pragma once
 
+#include <string>
+#include <memory>
+#include <opencv2/core/core.hpp>
+#include <opencv2/video/video.hpp>
+
 class FrameGrabber;
 class ConfigFile;
 

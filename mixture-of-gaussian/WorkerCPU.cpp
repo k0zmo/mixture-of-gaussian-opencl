@@ -3,7 +3,7 @@
 #include "ConfigFile.h"
 #include "FrameGrabber.h"
 
-#include <memory>
+#include <iostream>
 
 enum EBayerFilter
 {

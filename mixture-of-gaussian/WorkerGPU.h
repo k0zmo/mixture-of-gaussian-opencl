@@ -1,6 +1,9 @@
 #pragma once
 
+#include <opencv2/core/core.hpp>
+#include <memory>
 #include <clw/clw.h>
+
 #include "MixtureOfGaussianGPU.h"
 #include "GrayscaleGPU.h"
 #include "BayerFilterGPU.h"
@@ -16,7 +19,7 @@ public:
 		const clw::CommandQueue& queue,
 		ConfigFile& cfg);
 	bool init(const std::string& videoStream);
-	clw::Event processFrame();
+	clw::EventList processFrame();
 	bool grabFrame();
 
 	const cv::Mat& finalFrame() const { return dstFrame; }

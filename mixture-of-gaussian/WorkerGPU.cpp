@@ -2,6 +2,8 @@
 #include "ConfigFile.h"
 #include "FrameGrabber.h"
 
+#include <iostream>
+
 WorkerGPU::WorkerGPU(const clw::Context& context,
 	const clw::Device& device, 
 	const clw::CommandQueue& queue,
@@ -123,7 +125,7 @@ bool WorkerGPU::init(const std::string& videoStream)
 	return true;
 }
 
-clw::Event WorkerGPU::processFrame()
+clw::EventList WorkerGPU::processFrame()
 {
 	clw::Image2D sourceMogFrame;
 
@@ -155,7 +157,12 @@ clw::Event WorkerGPU::processFrame()
 		
 	clw::Event e2 = mogGPU.process(sourceMogFrame, learningRate);
 	clw::Event e3 = queue.asyncReadImage2D(mogGPU.output(), dstFrame.data, 0, 0, dstFrame.cols, dstFrame.rows);
-	return e3;
+
+	clw::EventList eventList;
+	eventList.append(e2);
+	eventList.append(e3);
+
+	return eventList;
 }
 
 bool WorkerGPU::grabFrame()

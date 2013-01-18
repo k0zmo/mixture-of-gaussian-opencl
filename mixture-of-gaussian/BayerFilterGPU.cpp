@@ -22,7 +22,7 @@ void BayerFilterGPU::init(int imageWidth,
 
 	width = imageWidth;
 	height = imageHeight;
-	cl_int2 frameSize = { width, height };
+	cl_int2 frameSize = {{ width, height }};
 
 	// Ustawienie argumentow i parametrow kerneli
 	kernel.setLocalWorkSize(workGroupSizeX, workGroupSizeY);
